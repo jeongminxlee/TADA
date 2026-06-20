@@ -4,10 +4,14 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
+  useNavigate,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { TabBar } from "@/components/tab-bar";
+import { isOnboarded } from "@/lib/adhd-shared";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -115,11 +119,25 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  // First-launch redirect: if the user has never finished onboarding,
+  // send them there from any tabbed screen. The /onboarding route itself
+  // is always accessible (for retake).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (pathname.startsWith("/onboarding")) return;
+    if (!isOnboarded()) {
+      navigate({ to: "/onboarding", replace: true });
+    }
+  }, [pathname, navigate]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <TabBar />
     </QueryClientProvider>
   );
 }
