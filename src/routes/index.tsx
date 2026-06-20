@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,9 +47,31 @@ const SCALE = [
 ];
 
 // Per DSM-5, a symptom "counts" toward the subtype threshold if it occurs
-// often or very often (>= 3 on this 0–4 scale).
+// often or very often (>= 3 on this 0–4 scale). The number-of-symptoms
+// threshold is age-dependent: children/adolescents <17 need 6+, adults
+// (17+) need 5+ in a domain (DSM-5, APA 2013).
 const COUNT_THRESHOLD = 3;
-const ADULT_SYMPTOM_THRESHOLD = 5; // 5+ for adolescents 17+/adults; 6+ for children
+
+type MedStatus = "none" | "considering" | "current" | "former";
+
+const MED_OPTIONS: { value: MedStatus; label: string; hint: string }[] = [
+  { value: "none", label: "Not on medication", hint: "Never been prescribed" },
+  { value: "considering", label: "Considering / pending eval", hint: "Looking into it" },
+  { value: "current", label: "Currently taking", hint: "Stimulant or non-stimulant" },
+  { value: "former", label: "Took it previously", hint: "Not currently on it" },
+];
+
+// Zod schema validates the onboarding payload on the client before we use
+// it to set thresholds and tailor tasks.
+const OnboardingSchema = z.object({
+  age: z
+    .number({ invalid_type_error: "Enter your age as a number" })
+    .int("Enter a whole number")
+    .min(5, "Must be 5 or older")
+    .max(120, "Enter a realistic age"),
+  meds: z.enum(["none", "considering", "current", "former"]),
+});
+type Onboarding = z.infer<typeof OnboardingSchema>;
 
 type Answers = Record<string, number | null>;
 
@@ -183,6 +206,30 @@ const TASKS: Record<
     ],
   },
 };
+
+// Medication-specific reminders layered on top of the subtype plan.
+// Grounded in MTA follow-up data (Jensen et al., 2007), NICE NG87, and
+// CHADD guidance on combining pharmacological + behavioral treatment.
+const MED_TASK: Record<MedStatus, Task | null> = {
+  none: null,
+  considering: {
+    title: "Note one symptom example to share with a clinician",
+    why: "Concrete, recent examples make assessment faster and more accurate (NICE NG87 assessment guidance).",
+  },
+  current: {
+    title: "Take medication on schedule and log how today felt (1–5)",
+    why: "Daily ratings help you and your prescriber spot dose timing or side-effect patterns. Behavioral skills + medication outperform either alone (MTA follow-up; NICE NG87).",
+  },
+  former: {
+    title: "Note today's hardest symptom moment for your next review",
+    why: "Tracking symptom impact off-medication informs whether to revisit pharmacological options with a clinician.",
+  },
+};
+
+function ageThreshold(age: number) {
+  // DSM-5: 6+ symptoms for under 17, 5+ for 17 and older
+  return age < 17 ? 6 : 5;
+}
 
 function Index() {
   const total = QUESTIONS.length;
