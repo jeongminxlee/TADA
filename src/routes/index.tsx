@@ -190,7 +190,12 @@ function NextStepCard({
   );
 }
 
-type Nudge = { task: string; firstStep: string; encouragement: string };
+type Nudge = {
+  task: string;
+  firstStepBullets: string[];
+  timeEstimate: string;
+  encouragement: string;
+};
 
 function QuickNudge({
   subtype,
@@ -272,10 +277,26 @@ function QuickNudge({
         </p>
       )}
       {nudge && (
-        <div className="mt-3 space-y-1.5 rounded-xl bg-background/60 p-3 text-sm">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Try this</p>
+        <div className="mt-3 space-y-2 rounded-xl bg-background/60 p-3 text-sm">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Try this</p>
+            {nudge.timeEstimate && (
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+                ⏱ {nudge.timeEstimate}
+              </span>
+            )}
+          </div>
           <p className="font-medium leading-snug">{nudge.task}</p>
-          <p className="text-xs leading-relaxed text-muted-foreground">{nudge.firstStep}</p>
+          {nudge.firstStepBullets?.length > 0 && (
+            <ul className="space-y-1 text-xs leading-relaxed text-foreground/90">
+              {nudge.firstStepBullets.map((b, i) => (
+                <li key={i} className="flex gap-2">
+                  <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           <p className="pt-1 text-xs italic text-foreground/80">{nudge.encouragement}</p>
         </div>
       )}
