@@ -161,3 +161,99 @@ function MoreRoute() {
     </AppShell>
   );
 }
+
+function ReminderSettings() {
+  const [settings, update] = useReminderSettings();
+  const [perm, setPerm] = useState<NotificationPermission | "unsupported">(
+    typeof window !== "undefined" && "Notification" in window
+      ? Notification.permission
+      : "unsupported"
+  );
+
+  const supported = perm !== "unsupported";
+
+  const handleToggle = async () => {
+    if (!settings.enabled) {
+      const p = await ensurePermission();
+      setPerm(p);
+      if (p !== "granted") return;
+    }
+    update({ enabled: !settings.enabled });
+  };
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 text-sm">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
+        Reminders
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Browser notifications nudging you to log mood and check today's plan.
+      </p>
+
+      {!supported && (
+        <p className="mt-3 rounded-lg bg-muted p-2 text-[12px] text-muted-foreground">
+          Your browser doesn't support notifications.
+        </p>
+      )}
+
+      <label className="mt-3 flex items-center justify-between gap-3">
+        <span className="font-medium">Enable reminders</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={settings.enabled}
+          disabled={!supported}
+          onClick={handleToggle}
+          className={
+            "relative inline-flex h-6 w-11 items-center rounded-full transition " +
+            (settings.enabled ? "bg-primary" : "bg-muted") +
+            (!supported ? " opacity-50" : "")
+          }
+        >
+          <span
+            className={
+              "inline-block h-5 w-5 transform rounded-full bg-background shadow transition " +
+              (settings.enabled ? "translate-x-5" : "translate-x-0.5")
+            }
+          />
+        </button>
+      </label>
+
+      {perm === "denied" && (
+        <p className="mt-2 text-[12px] text-destructive">
+          Notifications are blocked in your browser. Enable them in site settings, then toggle again.
+        </p>
+      )}
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <label className="text-xs">
+          <span className="block font-medium text-foreground">Task nudge</span>
+          <input
+            type="time"
+            value={settings.taskTime}
+            onChange={(e) => update({ taskTime: e.target.value })}
+            className="mt-1 w-full rounded-lg border border-input bg-background px-2 py-1.5 text-sm"
+          />
+        </label>
+        <label className="text-xs">
+          <span className="block font-medium text-foreground">Mood log</span>
+          <input
+            type="time"
+            value={settings.moodTime}
+            onChange={(e) => update({ moodTime: e.target.value })}
+            className="mt-1 w-full rounded-lg border border-input bg-background px-2 py-1.5 text-sm"
+          />
+        </label>
+      </div>
+
+      <button
+        type="button"
+        disabled={!supported || perm !== "granted"}
+        onClick={() => notify("Steady — test reminder", "Reminders are working.")}
+        className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-full border border-border text-xs font-medium disabled:opacity-50"
+      >
+        Send a test notification
+      </button>
+    </div>
+  );
+}
