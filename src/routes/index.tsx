@@ -679,6 +679,38 @@ function OnboardingStep({
             <p className="mt-2 text-xs text-destructive">{errors.meds}</p>
           )}
         </fieldset>
+
+        <fieldset>
+          <legend className="block text-sm font-medium text-foreground">
+            Are you taking any non-ADHD medication?
+          </legend>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {OTHER_MED_OPTIONS.map((opt) => {
+              const selected = otherMeds === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setOtherMeds(opt.value)}
+                  className={
+                    "rounded-2xl border px-4 py-3 text-left transition " +
+                    (selected
+                      ? "border-primary bg-primary/10 shadow-sm"
+                      : "border-border bg-card hover:border-primary/50")
+                  }
+                  aria-pressed={selected}
+                >
+                  <span className="block text-sm font-medium text-foreground">
+                    {opt.label}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {opt.hint}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
       </div>
 
       <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
