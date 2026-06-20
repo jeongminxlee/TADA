@@ -5,10 +5,10 @@ import { z } from "zod";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ADHD Self-Screener — DSM-5 Subtypes" },
-      { name: "description", content: "Adult ADHD self-screener based on the WHO ASRS v1.1 with DSM-5 subtype scoring. Informational, not a diagnosis." },
-      { property: "og:title", content: "ADHD Self-Screener — DSM-5 Subtypes" },
-      { property: "og:description", content: "Take the WHO ASRS v1.1 adult ADHD screener with subtype scoring and daily check-ins." },
+      { title: "Adult ADHD Self-Screener (UK) — WHO ASRS v1.1" },
+      { name: "description", content: "Free adult ADHD self-screener for the UK, based on the WHO ASRS v1.1 and NICE guideline NG87. Includes signposting to your GP and NHS services. Not a diagnosis." },
+      { property: "og:title", content: "Adult ADHD Self-Screener (UK) — WHO ASRS v1.1" },
+      { property: "og:description", content: "WHO ASRS v1.1 adult ADHD screener with NICE NG87-aligned guidance and NHS signposting." },
     ],
   }),
   component: Index,
