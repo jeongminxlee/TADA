@@ -12,9 +12,9 @@ const NudgeInput = z.object({
 });
 
 const NudgeOutput = z.object({
-  task: z.string(),
-  firstStep: z.string(),
-  encouragement: z.string(),
+  task: z.string().default(""),
+  firstStep: z.string().default(""),
+  encouragement: z.string().default(""),
 });
 
 export const suggestNudge = createServerFn({ method: "POST" })
@@ -68,11 +68,11 @@ const CoachInput = z.object({
 });
 
 const CoachOutput = z.object({
-  approach: z.string(),
-  firstStep: z.string(),
-  pitfall: z.string(),
-  ifStuck: z.string(),
-  reference: z.string(),
+  approach: z.string().default(""),
+  firstStep: z.string().default(""),
+  pitfall: z.string().default(""),
+  ifStuck: z.string().default(""),
+  reference: z.string().default(""),
 });
 
 export const coachTask = createServerFn({ method: "POST" })
@@ -112,12 +112,23 @@ export const coachTask = createServerFn({ method: "POST" })
       "Give: an approach tailored to their subtype and current state; a concrete first step they can do in under 5 minutes; the most likely pitfall for someone with their presentation on a task like this; a single rescue move if they get stuck; and the literature reference your approach draws from (e.g. 'Safren CBT-ADHD', 'Barkley 2012', 'NICE NG87').",
     ].join("\n");
 
-    const { output } = await generateText({
-      model: gateway("google/gemini-3-flash-preview"),
-      system,
-      prompt,
-      output: Output.object({ schema: CoachOutput }),
-    });
-
-    return output;
+    try {
+      const { output } = await generateText({
+        model: gateway("google/gemini-3-flash-preview"),
+        system,
+        prompt,
+        output: Output.object({ schema: CoachOutput }),
+      });
+      return output;
+    } catch (err) {
+      // Retry once without strict structured output, then parse loosely.
+      const { text } = await generateText({
+        model: gateway("google/gemini-3-flash-preview"),
+        system: system + " Respond with a single JSON object with keys approach, firstStep, pitfall, ifStuck, reference. No prose, no code fences.",
+        prompt,
+      });
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) throw err;
+      return CoachOutput.parse(JSON.parse(match[0]));
+    }
   });
