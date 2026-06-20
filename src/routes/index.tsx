@@ -1322,3 +1322,82 @@ function Summary({
     </div>
   );
 }
+
+function NhsNextSteps({ partAPositive }: { partAPositive: boolean }) {
+  return (
+    <div className="rounded-3xl border border-primary/30 bg-primary/5 p-8 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+        NHS next steps · UK
+      </p>
+      <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+        {partAPositive
+          ? "Worth talking to your GP"
+          : "If symptoms still affect your day"}
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        This screener can't diagnose ADHD, but you can take your results to
+        your GP. They can refer you to an NHS adult ADHD assessment service.
+        Waiting lists can be long — under <strong className="text-foreground">NHS
+        Right to Choose</strong> (England), you can usually ask to be referred
+        to a provider with a shorter wait.
+      </p>
+      <ul className="mt-5 grid gap-2 text-sm sm:grid-cols-2">
+        <NhsLink
+          href="https://www.nhs.uk/conditions/attention-deficit-hyperactivity-disorder-adhd/"
+          title="ADHD on NHS.uk"
+          hint="Overview, symptoms, treatment"
+        />
+        <NhsLink
+          href="https://www.nhs.uk/service-search/find-a-gp"
+          title="Find a GP"
+          hint="Register or book an appointment"
+        />
+        <NhsLink
+          href="https://www.nice.org.uk/guidance/ng87"
+          title="NICE guideline NG87"
+          hint="UK standard for ADHD care"
+        />
+        <NhsLink
+          href="https://adhduk.co.uk/right-to-choose/"
+          title="Right to Choose (ADHD UK)"
+          hint="Shorter NHS waiting lists in England"
+        />
+      </ul>
+      <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
+        In a crisis call <strong className="text-foreground">NHS 111</strong>{" "}
+        (option 2 for mental health) or <strong className="text-foreground">999</strong>{" "}
+        if life is at risk. Samaritans: <strong className="text-foreground">116 123</strong>, free, 24/7.
+      </p>
+    </div>
+  );
+}
+
+function NhsLink({
+  href,
+  title,
+  hint,
+}: {
+  href: string;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <li>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex items-start gap-3 rounded-2xl border border-border bg-background p-3 transition hover:border-primary/50"
+      >
+        <span aria-hidden className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+        <span className="flex-1">
+          <span className="block text-sm font-medium text-foreground">
+            {title}
+            <span className="ml-1 text-muted-foreground transition group-hover:text-primary">↗</span>
+          </span>
+          <span className="block text-xs text-muted-foreground">{hint}</span>
+        </span>
+      </a>
+    </li>
+  );
+}
