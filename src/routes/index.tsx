@@ -994,13 +994,17 @@ function Results({
       </div>
 
       <div className="rounded-2xl bg-accent/40 p-6 text-sm leading-relaxed text-accent-foreground">
-        <strong className="font-semibold">A note on interpretation.</strong> This
-        screener counts a symptom toward the DSM-5 threshold when you answered
-        “often” or “very often.” Your threshold of <strong>{result.threshold}+</strong>{" "}
-        reflects the DSM-5 rule for your age group (6+ under 17, 5+ for 17 and older).
-        A diagnosis also requires
-        onset before age 12, symptoms in 2+ settings, and clinically significant
-        impairment — only a qualified clinician can establish that.
+        <strong className="font-semibold">How this is scored.</strong> Items
+        come from the WHO Adult ADHD Self-Report Scale (ASRS v1.1, Kessler et
+        al., 2005). Part A (items 1–6) is the validated 6-item screener with
+        item-specific "shaded" thresholds — 4 or more shaded answers indicates
+        symptoms highly consistent with adult ADHD. All 18 items also map to
+        DSM-5 inattentive and hyperactive-impulsive symptom counts; your
+        threshold of <strong>{result.threshold}+</strong> reflects the DSM-5
+        age rule (6+ under 17, 5+ for 17 and older). Diagnosis also requires
+        onset before age 12, symptoms in 2+ settings, and clinically
+        significant impairment — only a qualified clinician can establish
+        that.
       </div>
 
       <div className="flex flex-wrap gap-3">
