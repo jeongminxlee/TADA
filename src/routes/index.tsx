@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,11 +38,11 @@ const HYPERACTIVITY = [
 ];
 
 const SCALE = [
-  { label: "Never", value: 0 },
-  { label: "Rarely", value: 1 },
-  { label: "Sometimes", value: 2 },
-  { label: "Often", value: 3 },
-  { label: "Very often", value: 4 },
+  { label: "Never", emoji: "😌", value: 0 },
+  { label: "Rarely", emoji: "🙂", value: 1 },
+  { label: "Sometimes", emoji: "🤔", value: 2 },
+  { label: "Often", emoji: "😅", value: 3 },
+  { label: "Very often", emoji: "🔥", value: 4 },
 ];
 
 // Per DSM-5, a symptom "counts" toward the subtype threshold if it occurs
@@ -52,12 +52,33 @@ const ADULT_SYMPTOM_THRESHOLD = 5; // 5+ for adolescents 17+/adults; 6+ for chil
 
 type Answers = Record<string, number | null>;
 
+type Q = { key: string; prefix: "I" | "H"; text: string; domain: string };
+
+const QUESTIONS: Q[] = [
+  ...INATTENTION.map((text, i) => ({
+    key: `I${i}`,
+    prefix: "I" as const,
+    text,
+    domain: "Inattention",
+  })),
+  ...HYPERACTIVITY.map((text, i) => ({
+    key: `H${i}`,
+    prefix: "H" as const,
+    text,
+    domain: "Hyperactivity & Impulsivity",
+  })),
+];
+
 function Index() {
-  const total = INATTENTION.length + HYPERACTIVITY.length;
+  const total = QUESTIONS.length;
   const [answers, setAnswers] = useState<Answers>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState(0); // 0..total-1 = questions, total = results, -1 = intro
+  const [started, setStarted] = useState(false);
+  const [pulse, setPulse] = useState(0);
 
   const answered = Object.values(answers).filter((v) => v !== null && v !== undefined).length;
+  const submitted = started && step >= total;
+  const currentQ = !submitted && started ? QUESTIONS[step] : null;
   const progress = Math.round((answered / total) * 100);
 
   const result = useMemo(() => {
@@ -91,166 +112,296 @@ function Index() {
     return { inattCount, hyperCount, inattMet, hyperMet, subtype, description };
   }, [answers]);
 
-  const canSubmit = answered === total;
+  function pick(value: number) {
+    if (!currentQ) return;
+    setAnswers((a) => ({ ...a, [currentQ.key]: value }));
+    setPulse((p) => p + 1);
+    // brief delay so the user sees the selection light up
+    window.setTimeout(() => {
+      setStep((s) => Math.min(s + 1, total));
+    }, 240);
+  }
+
+  function goBack() {
+    setStep((s) => Math.max(0, s - 1));
+  }
+
+  function skip() {
+    setStep((s) => Math.min(s + 1, total));
+  }
 
   function reset() {
     setAnswers({});
-    setSubmitted(false);
+    setStep(0);
+    setStarted(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // Keyboard shortcuts: 1–5 to answer, ← back
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!started || submitted) return;
+      if (e.key >= "1" && e.key <= "5") {
+        pick(Number(e.key) - 1);
+      } else if (e.key === "ArrowLeft" || e.key === "Backspace") {
+        goBack();
+      } else if (e.key === "ArrowRight") {
+        skip();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started, submitted, step, currentQ?.key]);
+
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-        <header className="mb-10">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
-            DSM-5 self-screener
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
-            ADHD subtype questionnaire
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Reflect on the last six months. For each statement, choose how often it
-            applies to you. This is an informational screener based on the DSM-5
-            criteria — it is not a diagnosis.
-          </p>
-        </header>
-
-        {!submitted && (
-          <div className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-background/80 px-6 py-3 backdrop-blur">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
-                {answered} of {total} answered
-              </span>
-              <span className="font-medium">{progress}%</span>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full bg-primary transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {submitted ? (
+    <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      <BackgroundBlobs />
+      <div className="relative mx-auto flex min-h-screen max-w-2xl flex-col px-6 py-8 sm:py-12">
+        {!started ? (
+          <Intro onStart={() => setStarted(true)} />
+        ) : submitted ? (
           <Results result={result} onReset={reset} />
         ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (canSubmit) setSubmitted(true);
-            }}
-            className="space-y-12"
-          >
-            <Section
-              title="Inattention"
-              caption="Nine criteria — needing 5+ marked 'often' or 'very often' for adults."
-              prefix="I"
-              items={INATTENTION}
-              answers={answers}
-              setAnswers={setAnswers}
+          <>
+            <TopBar
+              step={step}
+              total={total}
+              answered={answered}
+              progress={progress}
+              domain={currentQ!.domain}
             />
-            <Section
-              title="Hyperactivity & Impulsivity"
-              caption="Nine criteria — needing 5+ marked 'often' or 'very often' for adults."
-              prefix="H"
-              items={HYPERACTIVITY}
-              answers={answers}
-              setAnswers={setAnswers}
+            <QuestionCard
+              key={currentQ!.key}
+              q={currentQ!}
+              current={answers[currentQ!.key] ?? null}
+              onPick={pick}
+              pulse={pulse}
             />
-
-            <div className="flex flex-col items-start gap-4 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">
-                {canSubmit
-                  ? "All set — review your result."
-                  : `Answer all ${total} items to see your result.`}
-              </p>
-              <button
-                type="submit"
-                disabled={!canSubmit}
-                className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                See my result
-              </button>
-            </div>
-          </form>
+            <NavBar
+              step={step}
+              total={total}
+              answered={answered}
+              onBack={goBack}
+              onSkip={skip}
+            />
+          </>
         )}
-
-        <footer className="mt-16 border-t border-border pt-6 text-xs leading-relaxed text-muted-foreground">
-          This tool is for educational purposes only and does not replace a clinical
-          evaluation. DSM-5 also requires that symptoms be present before age 12, occur
-          in two or more settings, and cause clinically significant impairment.
-        </footer>
       </div>
     </main>
   );
 }
 
-function Section({
-  title,
-  caption,
-  prefix,
-  items,
-  answers,
-  setAnswers,
+function BackgroundBlobs() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
+      <div className="absolute -top-32 -left-24 h-80 w-80 rounded-full bg-primary/15 blur-3xl animate-blob" />
+      <div className="absolute top-1/3 -right-24 h-96 w-96 rounded-full bg-accent/30 blur-3xl animate-blob [animation-delay:2s]" />
+      <div className="absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-secondary/60 blur-3xl animate-blob [animation-delay:4s]" />
+    </div>
+  );
+}
+
+function Intro({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
+        DSM-5 self-screener
+      </p>
+      <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-6xl">
+        How does your brain run?
+      </h1>
+      <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+        18 quick questions, one at a time. Use the buttons, tap a number key
+        <Kbd>1</Kbd>–<Kbd>5</Kbd>, or arrow back if you change your mind. Built
+        around the DSM-5 criteria — for reflection, not diagnosis.
+      </p>
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <button
+          onClick={onStart}
+          className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30"
+        >
+          Start
+          <span className="transition-transform group-hover:translate-x-0.5">→</span>
+        </button>
+        <span className="text-sm text-muted-foreground">
+          Takes about 2 minutes
+        </span>
+      </div>
+      <ul className="mt-10 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+        <Feature emoji="⌨️" label="Keyboard friendly" />
+        <Feature emoji="↩️" label="Undo anytime" />
+        <Feature emoji="🧭" label="One thing at a time" />
+      </ul>
+    </div>
+  );
+}
+
+function Feature({ emoji, label }: { emoji: string; label: string }) {
+  return (
+    <li className="flex items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 backdrop-blur">
+      <span className="text-base">{emoji}</span>
+      <span>{label}</span>
+    </li>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="mx-0.5 inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-md border border-border bg-card px-1.5 text-xs font-medium text-foreground shadow-sm">
+      {children}
+    </kbd>
+  );
+}
+
+function TopBar({
+  step,
+  total,
+  answered,
+  progress,
+  domain,
 }: {
-  title: string;
-  caption: string;
-  prefix: "I" | "H";
-  items: string[];
-  answers: Answers;
-  setAnswers: (a: Answers) => void;
+  step: number;
+  total: number;
+  answered: number;
+  progress: number;
+  domain: string;
 }) {
   return (
-    <section>
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{caption}</p>
+    <div className="mb-8">
+      <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">
+          {domain}
+        </span>
+        <span>
+          {step + 1} <span className="text-muted-foreground/60">/ {total}</span>
+        </span>
       </div>
-      <ol className="space-y-4">
-        {items.map((item, i) => {
-          const key = `${prefix}${i}`;
-          const current = answers[key];
+      <div className="mt-3 flex gap-1">
+        {Array.from({ length: total }).map((_, i) => (
+          <div
+            key={i}
+            className={
+              "h-1.5 flex-1 rounded-full transition-all duration-300 " +
+              (i < step
+                ? "bg-primary"
+                : i === step
+                  ? "bg-primary/60"
+                  : "bg-muted")
+            }
+          />
+        ))}
+      </div>
+      <div className="mt-2 text-right text-[11px] text-muted-foreground">
+        {answered} answered · {progress}%
+      </div>
+    </div>
+  );
+}
+
+function QuestionCard({
+  q,
+  current,
+  onPick,
+  pulse,
+}: {
+  q: Q;
+  current: number | null;
+  onPick: (v: number) => void;
+  pulse: number;
+}) {
+  return (
+    <div
+      key={q.key + pulse}
+      className="flex-1 animate-fade-up"
+    >
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary/80">
+        In the past 6 months…
+      </p>
+      <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+        {q.text}
+      </h2>
+
+      <div className="mt-8 grid gap-2.5">
+        {SCALE.map((s, idx) => {
+          const selected = current === s.value;
           return (
-            <li
-              key={key}
-              className="rounded-2xl border border-border bg-card p-5 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:border-primary/40"
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => onPick(s.value)}
+              className={
+                "group flex items-center gap-4 rounded-2xl border px-4 py-4 text-left transition-all duration-150 " +
+                (selected
+                  ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.01]"
+                  : "border-border bg-card hover:border-primary/50 hover:bg-card hover:translate-x-1 active:scale-[0.99]")
+              }
             >
-              <div className="flex gap-4">
-                <span className="mt-0.5 text-sm font-semibold text-primary">
-                  {i + 1}
-                </span>
-                <p className="flex-1 text-[15px] leading-relaxed text-card-foreground">
-                  {item}
-                </p>
-              </div>
-              <div className="mt-4 grid grid-cols-5 gap-2">
-                {SCALE.map((s) => {
-                  const selected = current === s.value;
-                  return (
-                    <button
-                      key={s.value}
-                      type="button"
-                      onClick={() => setAnswers({ ...answers, [key]: s.value })}
-                      className={
-                        "rounded-xl border px-2 py-2.5 text-xs font-medium transition sm:text-sm " +
-                        (selected
-                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                          : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground")
-                      }
-                      aria-pressed={selected}
-                    >
-                      {s.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </li>
+              <span
+                className={
+                  "flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition " +
+                  (selected
+                    ? "border-primary-foreground/30 bg-primary-foreground/15 text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground group-hover:border-primary/50 group-hover:text-primary")
+                }
+              >
+                {idx + 1}
+              </span>
+              <span className="text-2xl" aria-hidden>
+                {s.emoji}
+              </span>
+              <span className="flex-1 text-base font-medium">{s.label}</span>
+              <span
+                className={
+                  "text-xs uppercase tracking-wider transition-opacity " +
+                  (selected ? "opacity-100" : "opacity-0 group-hover:opacity-60")
+                }
+              >
+                {selected ? "Selected" : "Tap"}
+              </span>
+            </button>
           );
         })}
-      </ol>
-    </section>
+      </div>
+    </div>
+  );
+}
+
+function NavBar({
+  step,
+  total,
+  answered,
+  onBack,
+  onSkip,
+}: {
+  step: number;
+  total: number;
+  answered: number;
+  onBack: () => void;
+  onSkip: () => void;
+}) {
+  return (
+    <div className="mt-10 flex items-center justify-between border-t border-border pt-5 text-sm">
+      <button
+        type="button"
+        onClick={onBack}
+        disabled={step === 0}
+        className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-muted-foreground transition hover:text-foreground disabled:opacity-30"
+      >
+        ← Back
+      </button>
+      <span className="text-xs text-muted-foreground">
+        <Kbd>1</Kbd>–<Kbd>5</Kbd> to answer · <Kbd>←</Kbd> back
+      </span>
+      <button
+        type="button"
+        onClick={onSkip}
+        disabled={step >= total - 1 && answered < total}
+        className="inline-flex items-center gap-1 rounded-full px-3 py-2 text-muted-foreground transition hover:text-foreground disabled:opacity-30"
+      >
+        Skip →
+      </button>
+    </div>
   );
 }
 
@@ -269,12 +420,12 @@ function Results({
   onReset: () => void;
 }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 py-8 animate-fade-up">
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
-          Result
+          🎉 Your result
         </p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+        <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
           {result.subtype}
         </h2>
         <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
@@ -308,11 +459,16 @@ function Results({
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex items-center justify-center rounded-full border border-border bg-background px-6 py-2.5 text-sm font-medium text-foreground transition hover:border-primary/50"
+          className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20 transition hover:opacity-90"
         >
-          Retake
+          Retake the quiz
         </button>
       </div>
+      <p className="pt-6 text-xs leading-relaxed text-muted-foreground">
+        This tool is for educational purposes only and does not replace a clinical
+        evaluation. DSM-5 also requires symptom onset before age 12, presence in 2+
+        settings, and clinically significant impairment.
+      </p>
     </div>
   );
 }
