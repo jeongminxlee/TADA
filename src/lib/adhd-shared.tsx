@@ -1,20 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { suggestNudge, coachTask } from "@/lib/nudge.functions";
-
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Adult ADHD Self-Screener (UK) — WHO ASRS v1.1" },
-      { name: "description", content: "Free adult ADHD self-screener for the UK, based on the WHO ASRS v1.1 and NICE guideline NG87. Includes signposting to your GP and NHS services. Not a diagnosis." },
-      { property: "og:title", content: "Adult ADHD Self-Screener (UK) — WHO ASRS v1.1" },
-      { property: "og:description", content: "WHO ASRS v1.1 adult ADHD screener with NICE NG87-aligned guidance and NHS signposting." },
-    ],
-  }),
-  component: Index,
-});
 
 // WHO Adult ADHD Self-Report Scale (ASRS v1.1) — Kessler et al., 2005.
 // The 18-item adult-worded version of the DSM criteria. Items 1–6 form the
