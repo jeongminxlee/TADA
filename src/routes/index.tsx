@@ -115,8 +115,9 @@ type Q = { key: string; text: string; domain: Domain; partA: boolean };
 const CheckInSchema = z.object({
   date: z.string(), // YYYY-MM-DD
   mood: z.number().int().min(1).max(5),
-  focus: z.number().int().min(1).max(5),
-  energy: z.number().int().min(1).max(5),
+  focus: z.number().int().min(1).max(5).nullable().optional(),
+  energy: z.number().int().min(1).max(5).nullable().optional(),
+  tags: z.array(z.string().min(1).max(24)).max(8).optional(),
   note: z.string().trim().max(280).optional(),
 });
 type CheckIn = z.infer<typeof CheckInSchema>;
@@ -124,6 +125,50 @@ type CheckIn = z.infer<typeof CheckInSchema>;
 const MOOD_LABELS = ["Rough", "Low", "Okay", "Good", "Great"];
 const FOCUS_LABELS = ["Scattered", "Foggy", "Okay", "Locked in", "Laser"];
 const ENERGY_LABELS = ["Empty", "Tired", "Steady", "Charged", "Buzzing"];
+
+// Common ADHD-relevant mood / state tags. Curated so they're quick to scan
+// but cover the states people commonly want to note alongside a mood rating.
+const MOOD_TAGS = [
+  "anxious",
+  "restless",
+  "overwhelmed",
+  "hyperfocused",
+  "scattered",
+  "irritable",
+  "motivated",
+  "calm",
+  "tired",
+  "low",
+  "wired",
+  "bored",
+];
+
+const CHECKIN_EVENT = "adhd-checkins-changed";
+
+function emitCheckInChange() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(CHECKIN_EVENT));
+}
+
+function useCheckIns(): [CheckIn[], (next: CheckIn[]) => void] {
+  const [history, setHistory] = useState<CheckIn[]>(() => loadCheckIns());
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const refresh = () => setHistory(loadCheckIns());
+    window.addEventListener(CHECKIN_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(CHECKIN_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+  const update = (next: CheckIn[]) => {
+    setHistory(next);
+    saveCheckIns(next);
+    emitCheckInChange();
+  };
+  return [history, update];
+}
 
 const CHECKIN_KEY = "adhd-checkins-v1";
 
