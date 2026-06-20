@@ -311,12 +311,22 @@ function Index() {
   const progress = Math.round((answered / total) * 100);
 
   const result = useMemo(() => {
-    const inattCount = INATTENTION.filter(
-      (_, i) => (answers[`I${i}`] ?? -1) >= COUNT_THRESHOLD,
+    const inattItems = ASRS.filter((i) => i.domain === "Inattention");
+    const hyperItems = ASRS.filter((i) => i.domain === "Hyperactivity & Impulsivity");
+
+    const inattCount = inattItems.filter(
+      (it) => (answers[`Q${it.num}`] ?? -1) >= COUNT_THRESHOLD,
     ).length;
-    const hyperCount = HYPERACTIVITY.filter(
-      (_, i) => (answers[`H${i}`] ?? -1) >= COUNT_THRESHOLD,
+    const hyperCount = hyperItems.filter(
+      (it) => (answers[`Q${it.num}`] ?? -1) >= COUNT_THRESHOLD,
     ).length;
+
+    // ASRS Part A validated screener: 4+ "shaded" answers across items 1–6.
+    const partAItems = ASRS.filter((i) => i.partA);
+    const partAShaded = partAItems.filter(
+      (it) => (answers[`Q${it.num}`] ?? -1) >= (it.shadeFrom ?? 3),
+    ).length;
+    const partAPositive = partAShaded >= 4;
 
     const inattMet = inattCount >= threshold;
     const hyperMet = hyperCount >= threshold;
@@ -342,7 +352,18 @@ function Index() {
         "You endorsed enough hyperactive-impulsive symptoms to meet the DSM-5 threshold, without reaching it for the inattentive domain.";
     }
 
-    return { inattCount, hyperCount, inattMet, hyperMet, subtype, description, key, threshold };
+    return {
+      inattCount,
+      hyperCount,
+      inattMet,
+      hyperMet,
+      subtype,
+      description,
+      key,
+      threshold,
+      partAShaded,
+      partAPositive,
+    };
   }, [answers, threshold]);
 
   function pick(value: number) {
