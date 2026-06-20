@@ -569,13 +569,23 @@ function OnboardingStep({
 }) {
   const [ageInput, setAgeInput] = useState(initial ? String(initial.age) : "");
   const [meds, setMeds] = useState<MedStatus | null>(initial?.meds ?? null);
+  const [otherMeds, setOtherMeds] = useState<"yes" | "no" | "preferNot" | null>(
+    initial?.otherMeds ?? null,
+  );
   const [errors, setErrors] = useState<{ age?: string; meds?: string }>({});
+
+  const OTHER_MED_OPTIONS: { value: "yes" | "no" | "preferNot"; label: string; hint: string }[] = [
+    { value: "yes", label: "Yes", hint: "e.g. antidepressants, anxiety meds, pain relief" },
+    { value: "no", label: "No", hint: "Not taking any other medication" },
+    { value: "preferNot", label: "Prefer not to say", hint: "You can skip this" },
+  ];
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = OnboardingSchema.safeParse({
       age: ageInput === "" ? Number.NaN : Number(ageInput),
       meds: meds ?? undefined,
+      otherMeds: otherMeds ?? undefined,
     });
     if (!parsed.success) {
       const flat = parsed.error.flatten().fieldErrors;
