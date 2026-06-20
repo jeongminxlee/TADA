@@ -475,36 +475,35 @@ function Intro({ onStart }: { onStart: () => void }) {
         How does your brain run?
       </h1>
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-        The 18-item Adult ADHD Self-Report Scale from the World Health
-        Organization (Kessler et al., 2005). One question at a time — tap a
-        number key <Kbd>1</Kbd>–<Kbd>5</Kbd>, or arrow back to change an
-        answer. For reflection, not diagnosis.
+        18 short questions, one at a time. No long forms, no scrolling walls
+        of text. Tap an answer or press <Kbd>1</Kbd>–<Kbd>5</Kbd> — you can
+        change anything later. For reflection, not diagnosis.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
           onClick={onStart}
           className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30"
         >
-          Start
+          Let's go
           <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </button>
         <span className="text-sm text-muted-foreground">
-          Takes about 2 minutes
+          About 2 minutes · no sign-up
         </span>
       </div>
       <ul className="mt-10 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-        <Feature emoji="⌨️" label="Keyboard friendly" />
-        <Feature emoji="↩️" label="Undo anytime" />
-        <Feature emoji="🧭" label="One thing at a time" />
+        <Feature label="One question at a time" />
+        <Feature label="Undo anytime" />
+        <Feature label="Stays on your device" />
       </ul>
     </div>
   );
 }
 
-function Feature({ emoji, label }: { emoji: string; label: string }) {
+function Feature({ label }: { label: string }) {
   return (
     <li className="flex items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 backdrop-blur">
-      <span className="text-base">{emoji}</span>
+      <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
       <span>{label}</span>
     </li>
   );
