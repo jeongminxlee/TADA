@@ -1405,3 +1405,163 @@ function NhsLink({
     </li>
   );
 }
+
+type Nudge = { task: string; firstStep: string; encouragement: string };
+
+function NudgeCard({ subtype }: { subtype: string }) {
+  const NUDGE_TASKS_KEY = "adhd-nudge-tasks-v1";
+  const [tasks, setTasks] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = JSON.parse(localStorage.getItem(NUDGE_TASKS_KEY) || "[]");
+      return Array.isArray(raw) ? raw.filter((t) => typeof t === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+  const [draft, setDraft] = useState("");
+  const [nudge, setNudge] = useState<Nudge | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const ask = useServerFn(suggestNudge);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(NUDGE_TASKS_KEY, JSON.stringify(tasks));
+    }
+  }, [tasks]);
+
+  function addTask() {
+    const t = draft.trim();
+    if (!t) return;
+    setTasks((arr) => [...arr, t].slice(0, 12));
+    setDraft("");
+  }
+
+  function removeTask(i: number) {
+    setTasks((arr) => arr.filter((_, idx) => idx !== i));
+  }
+
+  async function suggest() {
+    if (tasks.length === 0) return;
+    setLoading(true);
+    setErr(null);
+    try {
+      const today = loadCheckIns().find((c) => c.date === todayISO()) ?? null;
+      const result = await ask({
+        data: {
+          mood: today?.mood ?? null,
+          focus: today?.focus ?? null,
+          energy: today?.energy ?? null,
+          subtype,
+          tasks,
+        },
+      });
+      setNudge(result as Nudge);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      if (msg.includes("429")) setErr("Lots of requests right now — try again in a moment.");
+      else if (msg.includes("402")) setErr("AI credits ran out. Top up in workspace settings.");
+      else setErr("Couldn't get a nudge. Try again?");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm sm:p-8">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+        AI nudge
+      </p>
+      <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+        What's the next small thing?
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        Hand it your mood and task list. It picks one and breaks it into a
+        first step you can finish in five minutes.
+      </p>
+
+      <div className="mt-5">
+        <label htmlFor="nudge-task" className="sr-only">
+          Add a task
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="nudge-task"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.slice(0, 200))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTask();
+              }
+            }}
+            placeholder="e.g. Reply to landlord email"
+            className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+          />
+          <button
+            type="button"
+            onClick={addTask}
+            disabled={!draft.trim()}
+            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-40"
+          >
+            Add
+          </button>
+        </div>
+        {tasks.length > 0 ? (
+          <ul className="mt-3 space-y-1.5">
+            {tasks.map((t, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-2 rounded-xl border border-border bg-background/60 px-3 py-2"
+              >
+                <span className="mt-0.5 text-xs font-semibold text-muted-foreground">
+                  {i + 1}
+                </span>
+                <span className="flex-1 text-sm text-foreground">{t}</span>
+                <button
+                  type="button"
+                  onClick={() => removeTask(i)}
+                  aria-label={`Remove ${t}`}
+                  className="rounded-md px-2 text-xs text-muted-foreground transition hover:text-destructive"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Add a couple of tasks above, then ask for a nudge.
+          </p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={suggest}
+        disabled={loading || tasks.length === 0}
+        className="mt-5 w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition hover:opacity-90 disabled:opacity-40"
+      >
+        {loading ? "Thinking…" : "Suggest my next step"}
+      </button>
+      {err && <p className="mt-3 text-xs text-destructive">{err}</p>}
+
+      {nudge && (
+        <div className="mt-5 rounded-2xl border border-primary/30 bg-background p-4">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
+            Start here
+          </p>
+          <p className="mt-1 text-sm font-medium text-foreground">{nudge.task}</p>
+          <p className="mt-3 rounded-xl bg-primary/10 px-3 py-2.5 text-sm leading-snug text-foreground">
+            <strong className="mr-1 font-semibold">5-min step:</strong>
+            {nudge.firstStep}
+          </p>
+          <p className="mt-3 text-xs italic text-muted-foreground">
+            {nudge.encouragement}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
