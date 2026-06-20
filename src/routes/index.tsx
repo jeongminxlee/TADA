@@ -882,8 +882,8 @@ function Results({
         </div>
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
           The WHO-validated Part A screener (Kessler et al., 2005) flags scores
-          of 4 or more "shaded" responses as warranting further clinical
-          evaluation. This is not a diagnosis.
+          of 4 or more "shaded" responses as warranting further assessment by
+          a GP. This is not a diagnosis.
         </p>
       </div>
 
