@@ -535,9 +535,27 @@ function Results({
     hyperMet: boolean;
     subtype: string;
     description: string;
+    key: "inattentive" | "hyperactive" | "combined" | "below";
   };
   onReset: () => void;
 }) {
+  const plan = TASKS[result.key];
+  const storageKey = `adhd-tasks-${result.key}-${new Date().toISOString().slice(0, 10)}`;
+  const [done, setDone] = useState<Record<number, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || "{}");
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, JSON.stringify(done));
+    }
+  }, [done, storageKey]);
+  const completed = Object.values(done).filter(Boolean).length;
+
   return (
     <div className="space-y-8 py-8 animate-fade-up">
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
@@ -563,6 +581,71 @@ function Results({
             met={result.hyperMet}
           />
         </div>
+      </div>
+
+      <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+              Today's plan
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+              {plan.headline}
+            </h3>
+          </div>
+          <div className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+            {completed}/{plan.tasks.length} done
+          </div>
+        </div>
+
+        <ul className="mt-6 space-y-2.5">
+          {plan.tasks.map((t, i) => {
+            const checked = !!done[i];
+            return (
+              <li key={i}>
+                <button
+                  type="button"
+                  onClick={() => setDone((d) => ({ ...d, [i]: !d[i] }))}
+                  className={
+                    "group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition " +
+                    (checked
+                      ? "border-primary/40 bg-primary/5"
+                      : "border-border bg-background hover:border-primary/40")
+                  }
+                >
+                  <span
+                    className={
+                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition " +
+                      (checked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-transparent group-hover:border-primary/50")
+                    }
+                    aria-hidden
+                  >
+                    ✓
+                  </span>
+                  <span className="flex-1">
+                    <span
+                      className={
+                        "block text-[15px] font-medium leading-snug " +
+                        (checked ? "text-muted-foreground line-through" : "text-foreground")
+                      }
+                    >
+                      {t.title}
+                    </span>
+                    <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                      {t.why}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
+          Drawn from CBT for adult ADHD (Safren et al., 2005/2010), Barkley's executive-function framework (2012), NICE guideline NG87, and CHADD clinical summaries. These are self-management strategies, not a treatment plan — a clinician can personalize them.
+        </p>
       </div>
 
       <div className="rounded-2xl bg-accent/40 p-6 text-sm leading-relaxed text-accent-foreground">
