@@ -111,6 +111,17 @@ function OnboardingRoute() {
     if (submitted && phase === "quiz") setPhase("result");
   }, [submitted, phase]);
 
+  // Persist as soon as we have a result + onboarding, so refreshes don't lose it.
+  useEffect(() => {
+    if (phase !== "result" || !onboarding) return;
+    saveOnboardingResult({
+      onboarding,
+      result,
+      answers,
+      completedAt: new Date().toISOString(),
+    });
+  }, [phase, onboarding, result, answers]);
+
   function finish() {
     if (!onboarding) return;
     saveOnboardingResult({
