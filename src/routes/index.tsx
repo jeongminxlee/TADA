@@ -1141,19 +1141,19 @@ function CheckInCard() {
         <div className="mt-6 space-y-5">
           <Scale
             label="Mood"
-            emojis={MOOD_EMOJI}
+            labels={MOOD_LABELS}
             value={mood}
             onChange={setMood}
           />
           <Scale
             label="Focus"
-            emojis={FOCUS_EMOJI}
+            labels={FOCUS_LABELS}
             value={focus}
             onChange={setFocus}
           />
           <Scale
             label="Energy"
-            emojis={ENERGY_EMOJI}
+            labels={ENERGY_LABELS}
             value={energy}
             onChange={setEnergy}
           />
@@ -1193,9 +1193,9 @@ function CheckInCard() {
         </div>
       ) : (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Summary label="Mood" emoji={MOOD_EMOJI[(todays?.mood ?? mood ?? 1) - 1]} value={todays?.mood ?? mood!} />
-          <Summary label="Focus" emoji={FOCUS_EMOJI[(todays?.focus ?? focus ?? 1) - 1]} value={todays?.focus ?? focus!} />
-          <Summary label="Energy" emoji={ENERGY_EMOJI[(todays?.energy ?? energy ?? 1) - 1]} value={todays?.energy ?? energy!} />
+          <Summary label="Mood" word={MOOD_LABELS[(todays?.mood ?? mood ?? 1) - 1]} value={todays?.mood ?? mood!} />
+          <Summary label="Focus" word={FOCUS_LABELS[(todays?.focus ?? focus ?? 1) - 1]} value={todays?.focus ?? focus!} />
+          <Summary label="Energy" word={ENERGY_LABELS[(todays?.energy ?? energy ?? 1) - 1]} value={todays?.energy ?? energy!} />
           {(todays?.note || note) && (
             <p className="sm:col-span-3 rounded-xl bg-background p-3 text-sm italic text-muted-foreground">
               “{todays?.note ?? note}”
