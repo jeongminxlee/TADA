@@ -718,6 +718,7 @@ function NavBar({
 function Results({
   result,
   onReset,
+  onboarding,
 }: {
   result: {
     inattCount: number;
@@ -727,11 +728,20 @@ function Results({
     subtype: string;
     description: string;
     key: "inattentive" | "hyperactive" | "combined" | "below";
+    threshold: number;
   };
   onReset: () => void;
+  onboarding: OnboardingData | null;
 }) {
-  const plan = TASKS[result.key];
-  const storageKey = `adhd-tasks-${result.key}-${new Date().toISOString().slice(0, 10)}`;
+  const basePlan = TASKS[result.key];
+  const medTask = onboarding ? MED_TASK[onboarding.meds] : null;
+  const planTasks = medTask ? [...basePlan.tasks, medTask] : basePlan.tasks;
+  const medLabel = onboarding
+    ? MED_OPTIONS.find((m) => m.value === onboarding.meds)?.label
+    : null;
+  const storageKey = `adhd-tasks-${result.key}-${onboarding?.meds ?? "x"}-${new Date()
+    .toISOString()
+    .slice(0, 10)}`;
   const [done, setDone] = useState<Record<number, boolean>>(() => {
     if (typeof window === "undefined") return {};
     try {
@@ -760,16 +770,31 @@ function Results({
           {result.description}
         </p>
 
+        {onboarding && (
+          <div className="mt-5 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">
+              Age {onboarding.age} · threshold {result.threshold}+
+            </span>
+            {medLabel && (
+              <span className="rounded-full bg-accent/50 px-3 py-1 text-accent-foreground">
+                💊 {medLabel}
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <ScoreCard
             label="Inattention"
             count={result.inattCount}
             met={result.inattMet}
+            threshold={result.threshold}
           />
           <ScoreCard
             label="Hyperactivity-Impulsivity"
             count={result.hyperCount}
             met={result.hyperMet}
+            threshold={result.threshold}
           />
         </div>
       </div>
@@ -781,17 +806,18 @@ function Results({
               Today's plan
             </p>
             <h3 className="mt-2 text-2xl font-semibold tracking-tight">
-              {plan.headline}
+              {basePlan.headline}
             </h3>
           </div>
           <div className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-            {completed}/{plan.tasks.length} done
+            {completed}/{planTasks.length} done
           </div>
         </div>
 
         <ul className="mt-6 space-y-2.5">
-          {plan.tasks.map((t, i) => {
+          {planTasks.map((t, i) => {
             const checked = !!done[i];
+            const isMed = medTask && i === planTasks.length - 1;
             return (
               <li key={i}>
                 <button
@@ -816,6 +842,11 @@ function Results({
                     ✓
                   </span>
                   <span className="flex-1">
+                    {isMed && (
+                      <span className="mb-1 inline-block rounded-full bg-accent/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent-foreground">
+                        Medication-tailored
+                      </span>
+                    )}
                     <span
                       className={
                         "block text-[15px] font-medium leading-snug " +
@@ -842,8 +873,9 @@ function Results({
       <div className="rounded-2xl bg-accent/40 p-6 text-sm leading-relaxed text-accent-foreground">
         <strong className="font-semibold">A note on interpretation.</strong> This
         screener counts a symptom toward the DSM-5 threshold when you answered
-        “often” or “very often.” For adolescents 17+ and adults, 5 or more symptoms
-        in a domain meets the count; children require 6. A diagnosis also requires
+        “often” or “very often.” Your threshold of <strong>{result.threshold}+</strong>{" "}
+        reflects the DSM-5 rule for your age group (6+ under 17, 5+ for 17 and older).
+        A diagnosis also requires
         onset before age 12, symptoms in 2+ settings, and clinically significant
         impairment — only a qualified clinician can establish that.
       </div>
@@ -870,10 +902,12 @@ function ScoreCard({
   label,
   count,
   met,
+  threshold,
 }: {
   label: string;
   count: number;
   met: boolean;
+  threshold: number;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-background p-5">
@@ -892,7 +926,7 @@ function ScoreCard({
             : "bg-muted text-muted-foreground")
         }
       >
-        {met ? "Threshold met (5+)" : "Below threshold"}
+        {met ? `Threshold met (${threshold}+)` : `Below threshold (${threshold}+)`}
       </p>
     </div>
   );
