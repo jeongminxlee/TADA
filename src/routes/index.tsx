@@ -92,7 +92,7 @@ function HomeRoute() {
           reason={adaptive?.reason}
         />
 
-        <QuickNudge subtype={subtype} hasCheckIn={!!today} />
+        <QuickNudge subtype={subtype} hasCheckIn={!!today} planKey={planKey} />
 
         <div className="grid grid-cols-2 gap-3">
           <Link
@@ -192,7 +192,15 @@ function NextStepCard({
 
 type Nudge = { task: string; firstStep: string; encouragement: string };
 
-function QuickNudge({ subtype, hasCheckIn }: { subtype: string; hasCheckIn: boolean }) {
+function QuickNudge({
+  subtype,
+  hasCheckIn,
+  planKey,
+}: {
+  subtype: string;
+  hasCheckIn: boolean;
+  planKey: keyof typeof TASKS;
+}) {
   const ask = useServerFn(suggestNudge);
   const [nudge, setNudge] = useState<Nudge | null>(null);
   const [loading, setLoading] = useState(false);
@@ -210,31 +218,43 @@ function QuickNudge({ subtype, hasCheckIn }: { subtype: string; hasCheckIn: bool
     setLoading(true);
     setErr(null);
     try {
-      const tasks = (() => {
-        try {
-          return JSON.parse(localStorage.getItem("adhd-nudge-tasks-v1") || "[]");
-        } catch { return []; }
-      })();
-      if (!Array.isArray(tasks) || tasks.length === 0) {
-        setErr("Add a few tasks in the Tasks tab first.");
+      let userTasks: string[] = [];
+      try {
+        const raw = JSON.parse(localStorage.getItem("adhd-nudge-tasks-v1") || "[]");
+        if (Array.isArray(raw)) userTasks = raw.filter((t) => typeof t === "string" && t.trim());
+      } catch { /* ignore */ }
+      const planTitles = (TASKS[planKey]?.tasks ?? []).map((t) => t.title);
+      const today = loadCheckIns().find((c) => c.date === todayISO()) ?? null;
+      const adaptive = adaptiveTask(today);
+      const adaptiveTitle = adaptive ? [adaptive.task.title] : [];
+      const merged = Array.from(
+        new Set([...userTasks, ...adaptiveTitle, ...planTitles].map((s) => s.trim()).filter(Boolean)),
+      ).slice(0, 12);
+      if (merged.length === 0) {
+        setErr("No tasks available yet — finish the screener first.");
         setLoading(false);
         return;
       }
-      const today = loadCheckIns().find((c) => c.date === todayISO()) ?? null;
       const result = await ask({
         data: {
           mood: today?.mood ?? null,
           focus: today?.focus ?? null,
           energy: today?.energy ?? null,
           subtype,
-          tasks,
+          tasks: merged,
         },
       });
       setNudge(result as Nudge);
       localStorage.setItem("adhd-home-nudge", JSON.stringify(result));
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Something went wrong.";
-      setErr(msg.includes("402") ? "AI credits ran out." : "Couldn't get a nudge.");
+      setErr(
+        msg.includes("402")
+          ? "AI credits ran out."
+          : msg.includes("429")
+            ? "Lots of requests right now — try again in a moment."
+            : "Couldn't get a nudge. Try again?",
+      );
     } finally {
       setLoading(false);
     }
