@@ -888,7 +888,7 @@ function Results({
 
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
-          🎉 Your result
+          Your result
         </p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
           {result.subtype}
@@ -904,7 +904,7 @@ function Results({
             </span>
             {medLabel && (
               <span className="rounded-full bg-accent/50 px-3 py-1 text-accent-foreground">
-                💊 {medLabel}
+                {medLabel}
               </span>
             )}
           </div>
@@ -1132,7 +1132,7 @@ function CheckInCard() {
         </div>
         {saved && (
           <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            ✓ Logged today
+            Logged today
           </span>
         )}
       </div>
