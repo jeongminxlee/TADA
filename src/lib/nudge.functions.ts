@@ -12,9 +12,9 @@ const NudgeInput = z.object({
 });
 
 const NudgeOutput = z.object({
-  task: z.string(),
-  firstStep: z.string(),
-  encouragement: z.string(),
+  task: z.string().default(""),
+  firstStep: z.string().default(""),
+  encouragement: z.string().default(""),
 });
 
 export const suggestNudge = createServerFn({ method: "POST" })
@@ -68,11 +68,11 @@ const CoachInput = z.object({
 });
 
 const CoachOutput = z.object({
-  approach: z.string(),
-  firstStep: z.string(),
-  pitfall: z.string(),
-  ifStuck: z.string(),
-  reference: z.string(),
+  approach: z.string().default(""),
+  firstStep: z.string().default(""),
+  pitfall: z.string().default(""),
+  ifStuck: z.string().default(""),
+  reference: z.string().default(""),
 });
 
 export const coachTask = createServerFn({ method: "POST" })
