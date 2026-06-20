@@ -999,9 +999,15 @@ function Results({
         </ul>
 
         <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
-          Drawn from CBT for adult ADHD (Safren et al., 2005/2010), Barkley's executive-function framework (2012), NICE guideline NG87, and CHADD clinical summaries. These are self-management strategies, not a treatment plan — a clinician can personalize them.
+          Drawn from CBT for adult ADHD (Safren et al., 2005/2010), Barkley's
+          executive-function framework (2012), NICE guideline NG87, and ADHD
+          UK / ADHD Foundation resources. These are self-management strategies,
+          not a treatment plan — your GP or an NHS ADHD service can
+          personalise them.
         </p>
       </div>
+
+      <NhsNextSteps partAPositive={result.partAPositive} />
 
       <div className="rounded-2xl bg-accent/40 p-6 text-sm leading-relaxed text-accent-foreground">
         <strong className="font-semibold">How this is scored.</strong> Items
