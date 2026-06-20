@@ -8,6 +8,7 @@ import {
   clearOnboarding,
   useOnboardingResult,
 } from "@/lib/adhd-shared";
+import { useReminderSettings, ensurePermission, notify } from "@/lib/reminders";
 
 export const Route = createFileRoute("/more")({
   head: () => ({
@@ -98,6 +99,8 @@ function MoreRoute() {
 
       {section === "settings" && (
         <div className="space-y-3">
+          <ReminderSettings />
+
           {stored ? (
             <div className="rounded-2xl border border-border bg-card p-4 text-sm">
               <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
