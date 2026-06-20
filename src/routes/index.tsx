@@ -71,11 +71,11 @@ const ASRS: AsrsItem[] = [
 ];
 
 const SCALE = [
-  { label: "Never", emoji: "😌", value: 0 },
-  { label: "Rarely", emoji: "🙂", value: 1 },
-  { label: "Sometimes", emoji: "🤔", value: 2 },
-  { label: "Often", emoji: "😅", value: 3 },
-  { label: "Very often", emoji: "🔥", value: 4 },
+  { label: "Never", hint: "Not really me", value: 0 },
+  { label: "Rarely", hint: "Once in a while", value: 1 },
+  { label: "Sometimes", hint: "Here and there", value: 2 },
+  { label: "Often", hint: "Most weeks", value: 3 },
+  { label: "Very often", hint: "Pretty much always", value: 4 },
 ];
 
 // Per DSM-5, a symptom "counts" toward the subtype threshold if it occurs
@@ -119,9 +119,9 @@ const CheckInSchema = z.object({
 });
 type CheckIn = z.infer<typeof CheckInSchema>;
 
-const MOOD_EMOJI = ["😣", "😕", "😐", "🙂", "😄"];
-const FOCUS_EMOJI = ["🌪️", "😵‍💫", "👌", "🎯", "🔬"];
-const ENERGY_EMOJI = ["🪫", "😴", "😌", "⚡", "🚀"];
+const MOOD_LABELS = ["Rough", "Low", "Okay", "Good", "Great"];
+const FOCUS_LABELS = ["Scattered", "Foggy", "Okay", "Locked in", "Laser"];
+const ENERGY_LABELS = ["Empty", "Tired", "Steady", "Charged", "Buzzing"];
 
 const CHECKIN_KEY = "adhd-checkins-v1";
 
@@ -475,36 +475,35 @@ function Intro({ onStart }: { onStart: () => void }) {
         How does your brain run?
       </h1>
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-        The 18-item Adult ADHD Self-Report Scale from the World Health
-        Organization (Kessler et al., 2005). One question at a time — tap a
-        number key <Kbd>1</Kbd>–<Kbd>5</Kbd>, or arrow back to change an
-        answer. For reflection, not diagnosis.
+        18 short questions, one at a time. No long forms, no scrolling walls
+        of text. Tap an answer or press <Kbd>1</Kbd>–<Kbd>5</Kbd> — you can
+        change anything later. For reflection, not diagnosis.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
           onClick={onStart}
           className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30"
         >
-          Start
+          Let's go
           <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </button>
         <span className="text-sm text-muted-foreground">
-          Takes about 2 minutes
+          About 2 minutes · no sign-up
         </span>
       </div>
       <ul className="mt-10 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-        <Feature emoji="⌨️" label="Keyboard friendly" />
-        <Feature emoji="↩️" label="Undo anytime" />
-        <Feature emoji="🧭" label="One thing at a time" />
+        <Feature label="One question at a time" />
+        <Feature label="Undo anytime" />
+        <Feature label="Stays on your device" />
       </ul>
     </div>
   );
 }
 
-function Feature({ emoji, label }: { emoji: string; label: string }) {
+function Feature({ label }: { label: string }) {
   return (
     <li className="flex items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 backdrop-blur">
-      <span className="text-base">{emoji}</span>
+      <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
       <span>{label}</span>
     </li>
   );
@@ -712,7 +711,7 @@ function QuestionCard({
       className="flex-1 animate-fade-up"
     >
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary/80">
-        In the past 6 months…
+        In the past 6 months… · no wrong answers
       </p>
       <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
         {q.text}
@@ -743,10 +742,17 @@ function QuestionCard({
               >
                 {idx + 1}
               </span>
-              <span className="text-2xl" aria-hidden>
-                {s.emoji}
+              <span className="flex-1">
+                <span className="block text-base font-medium leading-tight">{s.label}</span>
+                <span
+                  className={
+                    "block text-xs " +
+                    (selected ? "text-primary-foreground/80" : "text-muted-foreground")
+                  }
+                >
+                  {s.hint}
+                </span>
               </span>
-              <span className="flex-1 text-base font-medium">{s.label}</span>
               <span
                 className={
                   "text-xs uppercase tracking-wider transition-opacity " +
@@ -882,7 +888,7 @@ function Results({
 
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
-          🎉 Your result
+          Your result
         </p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
           {result.subtype}
@@ -898,7 +904,7 @@ function Results({
             </span>
             {medLabel && (
               <span className="rounded-full bg-accent/50 px-3 py-1 text-accent-foreground">
-                💊 {medLabel}
+                {medLabel}
               </span>
             )}
           </div>
@@ -931,6 +937,9 @@ function Results({
             <h3 className="mt-2 text-2xl font-semibold tracking-tight">
               {basePlan.headline}
             </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pick just <strong className="font-semibold text-foreground">one</strong> to try today. Small wins count — you can come back tomorrow.
+            </p>
           </div>
           <div className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             {completed}/{planTasks.length} done
@@ -1126,7 +1135,7 @@ function CheckInCard() {
         </div>
         {saved && (
           <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-            ✓ Logged today
+            Logged today
           </span>
         )}
       </div>
@@ -1135,19 +1144,19 @@ function CheckInCard() {
         <div className="mt-6 space-y-5">
           <Scale
             label="Mood"
-            emojis={MOOD_EMOJI}
+            labels={MOOD_LABELS}
             value={mood}
             onChange={setMood}
           />
           <Scale
             label="Focus"
-            emojis={FOCUS_EMOJI}
+            labels={FOCUS_LABELS}
             value={focus}
             onChange={setFocus}
           />
           <Scale
             label="Energy"
-            emojis={ENERGY_EMOJI}
+            labels={ENERGY_LABELS}
             value={energy}
             onChange={setEnergy}
           />
@@ -1187,9 +1196,9 @@ function CheckInCard() {
         </div>
       ) : (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Summary label="Mood" emoji={MOOD_EMOJI[(todays?.mood ?? mood ?? 1) - 1]} value={todays?.mood ?? mood!} />
-          <Summary label="Focus" emoji={FOCUS_EMOJI[(todays?.focus ?? focus ?? 1) - 1]} value={todays?.focus ?? focus!} />
-          <Summary label="Energy" emoji={ENERGY_EMOJI[(todays?.energy ?? energy ?? 1) - 1]} value={todays?.energy ?? energy!} />
+          <Summary label="Mood" word={MOOD_LABELS[(todays?.mood ?? mood ?? 1) - 1]} value={todays?.mood ?? mood!} />
+          <Summary label="Focus" word={FOCUS_LABELS[(todays?.focus ?? focus ?? 1) - 1]} value={todays?.focus ?? focus!} />
+          <Summary label="Energy" word={ENERGY_LABELS[(todays?.energy ?? energy ?? 1) - 1]} value={todays?.energy ?? energy!} />
           {(todays?.note || note) && (
             <p className="sm:col-span-3 rounded-xl bg-background p-3 text-sm italic text-muted-foreground">
               “{todays?.note ?? note}”
@@ -1240,12 +1249,12 @@ function CheckInCard() {
 
 function Scale({
   label,
-  emojis,
+  labels,
   value,
   onChange,
 }: {
   label: string;
-  emojis: string[];
+  labels: string[];
   value: number | null;
   onChange: (v: number) => void;
 }) {
@@ -1254,11 +1263,11 @@ function Scale({
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-foreground">{label}</span>
         <span className="text-xs text-muted-foreground">
-          {value ? `${value}/5` : "—"}
+          {value ? labels[value - 1] : "Pick one"}
         </span>
       </div>
       <div className="mt-2 grid grid-cols-5 gap-1.5">
-        {emojis.map((e, i) => {
+        {labels.map((word, i) => {
           const v = i + 1;
           const selected = value === v;
           return (
@@ -1266,15 +1275,16 @@ function Scale({
               key={v}
               type="button"
               onClick={() => onChange(v)}
-              aria-label={`${label} ${v}`}
+              aria-label={`${label}: ${word}`}
               className={
-                "flex h-12 items-center justify-center rounded-xl border text-2xl transition " +
+                "flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl border px-1 transition " +
                 (selected
-                  ? "border-primary bg-primary/10 scale-105"
-                  : "border-border bg-background hover:border-primary/50 hover:scale-105")
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-background hover:border-primary/50")
               }
             >
-              {e}
+              <span className="text-sm font-semibold text-foreground">{v}</span>
+              <span className="text-[10px] leading-tight text-muted-foreground">{word}</span>
             </button>
           );
         })}
@@ -1285,20 +1295,20 @@ function Scale({
 
 function Summary({
   label,
-  emoji,
+  word,
   value,
 }: {
   label: string;
-  emoji: string;
+  word: string;
   value: number;
 }) {
   return (
     <div className="rounded-xl border border-border bg-background p-3 text-center">
-      <div className="text-2xl">{emoji}</div>
-      <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+      <div className="text-base font-semibold text-foreground">{word}</div>
+      <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
-      <div className="text-sm font-semibold">{value}/5</div>
+      <div className="text-xs text-muted-foreground">{value}/5</div>
     </div>
   );
 }
