@@ -71,11 +71,11 @@ const ASRS: AsrsItem[] = [
 ];
 
 const SCALE = [
-  { label: "Never", emoji: "😌", value: 0 },
-  { label: "Rarely", emoji: "🙂", value: 1 },
-  { label: "Sometimes", emoji: "🤔", value: 2 },
-  { label: "Often", emoji: "😅", value: 3 },
-  { label: "Very often", emoji: "🔥", value: 4 },
+  { label: "Never", hint: "Not really me", value: 0 },
+  { label: "Rarely", hint: "Once in a while", value: 1 },
+  { label: "Sometimes", hint: "Here and there", value: 2 },
+  { label: "Often", hint: "Most weeks", value: 3 },
+  { label: "Very often", hint: "Pretty much always", value: 4 },
 ];
 
 // Per DSM-5, a symptom "counts" toward the subtype threshold if it occurs
@@ -119,9 +119,9 @@ const CheckInSchema = z.object({
 });
 type CheckIn = z.infer<typeof CheckInSchema>;
 
-const MOOD_EMOJI = ["😣", "😕", "😐", "🙂", "😄"];
-const FOCUS_EMOJI = ["🌪️", "😵‍💫", "👌", "🎯", "🔬"];
-const ENERGY_EMOJI = ["🪫", "😴", "😌", "⚡", "🚀"];
+const MOOD_LABELS = ["Rough", "Low", "Okay", "Good", "Great"];
+const FOCUS_LABELS = ["Scattered", "Foggy", "Okay", "Locked in", "Laser"];
+const ENERGY_LABELS = ["Empty", "Tired", "Steady", "Charged", "Buzzing"];
 
 const CHECKIN_KEY = "adhd-checkins-v1";
 
