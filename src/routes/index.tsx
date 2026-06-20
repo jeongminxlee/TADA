@@ -104,6 +104,7 @@ const OnboardingSchema = z.object({
     .min(5, "Must be 5 or older")
     .max(120, "Enter a realistic age"),
   meds: z.enum(["none", "considering", "current", "former"]),
+  otherMeds: z.enum(["yes", "no", "preferNot"]).optional(),
 });
 type OnboardingData = z.infer<typeof OnboardingSchema>;
 
