@@ -943,6 +943,13 @@ function Results({
   }, [done, storageKey]);
   const completed = Object.values(done).filter(Boolean).length;
 
+  const [dashTab, setDashTab] = useState<"mood" | "tasks" | "coach">("mood");
+  const dashTabs: { id: "mood" | "tasks" | "coach"; label: string; hint: string }[] = [
+    { id: "mood", label: "Mood", hint: "Daily check-in" },
+    { id: "tasks", label: "Tasks", hint: "Today's plan" },
+    { id: "coach", label: "Coach", hint: "AI nudge" },
+  ];
+
   return (
     <div className="space-y-8 py-8 animate-fade-up">
       <div
