@@ -711,7 +711,7 @@ function QuestionCard({
       className="flex-1 animate-fade-up"
     >
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary/80">
-        In the past 6 months…
+        In the past 6 months… · no wrong answers
       </p>
       <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
         {q.text}
@@ -937,6 +937,9 @@ function Results({
             <h3 className="mt-2 text-2xl font-semibold tracking-tight">
               {basePlan.headline}
             </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pick just <strong className="font-semibold text-foreground">one</strong> to try today. Small wins count — you can come back tomorrow.
+            </p>
           </div>
           <div className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             {completed}/{planTasks.length} done
