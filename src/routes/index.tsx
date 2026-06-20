@@ -1663,3 +1663,29 @@ function NudgeCard({ subtype }: { subtype: string }) {
     </div>
   );
 }
+
+function CoachField({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={
+          "mt-0.5 text-sm leading-snug text-foreground " +
+          (highlight ? "rounded-lg bg-primary/10 px-2 py-1.5 font-medium" : "")
+        }
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
