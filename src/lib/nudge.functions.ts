@@ -13,7 +13,8 @@ const NudgeInput = z.object({
 
 const NudgeOutput = z.object({
   task: z.string().default(""),
-  firstStep: z.string().default(""),
+  firstStepBullets: z.array(z.string()).default([]),
+  timeEstimate: z.string().default(""),
   encouragement: z.string().default(""),
 });
 
@@ -29,9 +30,10 @@ export const suggestNudge = createServerFn({ method: "POST" })
       "You are a warm, no-judgement ADHD coach helping an adult in the UK take one small action.",
       "You receive their current mood/focus/energy (1-5), their ADHD presentation if known, and a short list of tasks they wrote down.",
       "Pick exactly ONE task from their list — the one most likely to get done given how they feel right now (low energy = pick the easiest; high energy = pick something with momentum).",
-      "Break it into a single first step that can be finished in 5 minutes or less. Be concrete: include the verb, the object, and where to start. No multi-step plans.",
-      "Then give one short, kind sentence of encouragement. No toxic positivity, no exclamation marks stacked, no emojis.",
-      "Use British English. Keep every field short.",
+      "Break the first step into 2-3 SHORT bullets (max ~10 words each). Each bullet starts with a verb. ADHD-friendly: tiny, concrete, no decisions.",
+      "Give a realistic timeEstimate like '2 min', '5 min', '10 min'.",
+      "Add one short, kind sentence of encouragement. No toxic positivity, no stacked exclamation marks, no emojis.",
+      "Use British English. Keep every bullet short.",
     ].join(" ");
 
     const profile = [
@@ -68,10 +70,11 @@ const CoachInput = z.object({
 });
 
 const CoachOutput = z.object({
-  approach: z.string().default(""),
-  firstStep: z.string().default(""),
-  pitfall: z.string().default(""),
-  ifStuck: z.string().default(""),
+  approachBullets: z.array(z.string()).default([]),
+  firstStepBullets: z.array(z.string()).default([]),
+  timeEstimate: z.string().default(""),
+  pitfallBullets: z.array(z.string()).default([]),
+  ifStuckBullets: z.array(z.string()).default([]),
   reference: z.string().default(""),
 });
 
@@ -93,7 +96,9 @@ export const coachTask = createServerFn({ method: "POST" })
       "- Combined: blend both; protect attention while giving the body an outlet.",
       "- Low energy/focus: shrink the task; rely on momentum tricks (2-minute rule, smallest possible start).",
       "- High energy: ride it; pair with the hardest or most-avoided part.",
-      "Use British English. Be concrete and specific to the task. No emojis. Keep each field short (one or two sentences).",
+      "Use British English. Be concrete and specific. No emojis.",
+      "Format EVERY field except 'reference' and 'timeEstimate' as a short bullet list (2-4 bullets, each max ~12 words, starting with a verb). ADHD-friendly: skimmable, no walls of text.",
+      "timeEstimate is a short string like '5 min' or '15 min' for the first step.",
     ].join(" ");
 
     const profile = [
@@ -109,7 +114,7 @@ export const coachTask = createServerFn({ method: "POST" })
       profile || "No check-in data yet.",
       `Task: ${data.task}`,
       "",
-      "Give: an approach tailored to their subtype and current state; a concrete first step they can do in under 5 minutes; the most likely pitfall for someone with their presentation on a task like this; a single rescue move if they get stuck; and the literature reference your approach draws from (e.g. 'Safren CBT-ADHD', 'Barkley 2012', 'NICE NG87').",
+      "Return bullets for: approachBullets (tailored to subtype + current state), firstStepBullets (doable in under 5 minutes), pitfallBullets (most likely pitfall for their presentation), ifStuckBullets (rescue moves). Plus timeEstimate and a single 'reference' string (e.g. 'Safren CBT-ADHD', 'Barkley 2012', 'NICE NG87').",
     ].join("\n");
 
     try {
@@ -124,7 +129,7 @@ export const coachTask = createServerFn({ method: "POST" })
       // Retry once without strict structured output, then parse loosely.
       const { text } = await generateText({
         model: gateway("google/gemini-3-flash-preview"),
-        system: system + " Respond with a single JSON object with keys approach, firstStep, pitfall, ifStuck, reference. No prose, no code fences.",
+        system: system + " Respond with a single JSON object with keys approachBullets, firstStepBullets, timeEstimate, pitfallBullets, ifStuckBullets, reference. Bullet fields are arrays of short strings. No prose, no code fences.",
         prompt,
       });
       const match = text.match(/\{[\s\S]*\}/);

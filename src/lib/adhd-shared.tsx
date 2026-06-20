@@ -1856,12 +1856,18 @@ export function NhsLink({
   );
 }
 
-type Nudge = { task: string; firstStep: string; encouragement: string };
+type Nudge = {
+  task: string;
+  firstStepBullets: string[];
+  timeEstimate: string;
+  encouragement: string;
+};
 type Coach = {
-  approach: string;
-  firstStep: string;
-  pitfall: string;
-  ifStuck: string;
+  approachBullets: string[];
+  firstStepBullets: string[];
+  timeEstimate: string;
+  pitfallBullets: string[];
+  ifStuckBullets: string[];
   reference: string;
 };
 
@@ -2064,14 +2070,21 @@ export function NudgeCard({ subtype }: { subtype: string }) {
                     <p className="px-3 pb-2 text-xs text-destructive">{tErr}</p>
                   )}
                   {c && open && (
-                    <div className="space-y-2 border-t border-border/60 bg-primary/[0.04] px-3 py-3 text-sm">
-                      <CoachField label="Approach" value={c.approach} />
-                      <CoachField label="5-min start" value={c.firstStep} highlight />
-                      <CoachField label="Watch out for" value={c.pitfall} />
-                      <CoachField label="If you get stuck" value={c.ifStuck} />
-                      <p className="pt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Based on {c.reference}
-                      </p>
+                    <div className="space-y-3 border-t border-border/60 bg-primary/[0.04] px-3 py-3 text-sm">
+                      <CoachBullets label="Approach" items={c.approachBullets} />
+                      <CoachBullets
+                        label="First step"
+                        items={c.firstStepBullets}
+                        highlight
+                        timeEstimate={c.timeEstimate}
+                      />
+                      <CoachBullets label="Watch out for" items={c.pitfallBullets} />
+                      <CoachBullets label="If you get stuck" items={c.ifStuckBullets} />
+                      {c.reference && (
+                        <p className="pt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Based on {c.reference}
+                        </p>
+                      )}
                     </div>
                   )}
                 </li>
@@ -2097,14 +2110,27 @@ export function NudgeCard({ subtype }: { subtype: string }) {
 
       {nudge && (
         <div className="mt-5 rounded-2xl border border-primary/30 bg-background p-4">
-          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
-            Start here
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
+              Start here
+            </p>
+            {nudge.timeEstimate && (
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+                ⏱ {nudge.timeEstimate}
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm font-medium text-foreground">{nudge.task}</p>
-          <p className="mt-3 rounded-xl bg-primary/10 px-3 py-2.5 text-sm leading-snug text-foreground">
-            <strong className="mr-1 font-semibold">5-min step:</strong>
-            {nudge.firstStep}
-          </p>
+          {nudge.firstStepBullets.length > 0 && (
+            <ul className="mt-3 space-y-1.5 rounded-xl bg-primary/10 px-3 py-2.5 text-sm leading-snug text-foreground">
+              {nudge.firstStepBullets.map((b, i) => (
+                <li key={i} className="flex gap-2">
+                  <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           <p className="mt-3 text-xs italic text-muted-foreground">
             {nudge.encouragement}
           </p>
@@ -2114,28 +2140,43 @@ export function NudgeCard({ subtype }: { subtype: string }) {
   );
 }
 
-export function CoachField({
+export function CoachBullets({
   label,
-  value,
+  items,
   highlight,
+  timeEstimate,
 }: {
   label: string;
-  value: string;
+  items: string[];
   highlight?: boolean;
+  timeEstimate?: string;
 }) {
+  if (!items || items.length === 0) return null;
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </p>
-      <p
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </p>
+        {timeEstimate && (
+          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+            ⏱ {timeEstimate}
+          </span>
+        )}
+      </div>
+      <ul
         className={
-          "mt-0.5 text-sm leading-snug text-foreground " +
+          "mt-1 space-y-1 text-sm leading-snug text-foreground " +
           (highlight ? "rounded-lg bg-primary/10 px-2 py-1.5 font-medium" : "")
         }
       >
-        {value}
-      </p>
+        {items.map((b, i) => (
+          <li key={i} className="flex gap-2">
+            <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
