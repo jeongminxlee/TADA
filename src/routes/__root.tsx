@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Steady — ADHD self-management (UK)" },
       { name: "description", content: "Mobile app for adults with ADHD in the UK: WHO ASRS screener, daily mood tracking, adaptive tasks, AI coach, and NHS signposting (NICE NG87)." },
-      { name: "theme-color", content: "#0f1b3d" },
+      { name: "theme-color", content: "#005eb8" },
       { property: "og:title", content: "Steady — ADHD self-management (UK)" },
       { property: "og:description", content: "ASRS screener, mood tracking, adaptive tasks, AI coach, NHS signposting." },
       { property: "og:type", content: "website" },
@@ -95,6 +95,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "manifest",
+        href: "/manifest.webmanifest",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/icon-192.png",
       },
     ],
   }),
