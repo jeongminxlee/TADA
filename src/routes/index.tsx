@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { suggestNudge } from "@/lib/nudge.functions";
+import { suggestNudge, coachTask } from "@/lib/nudge.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -1407,6 +1407,13 @@ function NhsLink({
 }
 
 type Nudge = { task: string; firstStep: string; encouragement: string };
+type Coach = {
+  approach: string;
+  firstStep: string;
+  pitfall: string;
+  ifStuck: string;
+  reference: string;
+};
 
 function NudgeCard({ subtype }: { subtype: string }) {
   const NUDGE_TASKS_KEY = "adhd-nudge-tasks-v1";
@@ -1423,7 +1430,12 @@ function NudgeCard({ subtype }: { subtype: string }) {
   const [nudge, setNudge] = useState<Nudge | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [coaches, setCoaches] = useState<Record<string, Coach>>({});
+  const [coachLoading, setCoachLoading] = useState<string | null>(null);
+  const [coachErr, setCoachErr] = useState<Record<string, string>>({});
+  const [openCoach, setOpenCoach] = useState<Record<string, boolean>>({});
   const ask = useServerFn(suggestNudge);
+  const coach = useServerFn(coachTask);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -1440,6 +1452,40 @@ function NudgeCard({ subtype }: { subtype: string }) {
 
   function removeTask(i: number) {
     setTasks((arr) => arr.filter((_, idx) => idx !== i));
+    setCoaches((c) => {
+      const next = { ...c };
+      delete next[tasks[i]];
+      return next;
+    });
+  }
+
+  async function coachOne(task: string) {
+    setCoachLoading(task);
+    setCoachErr((e) => ({ ...e, [task]: "" }));
+    try {
+      const today = loadCheckIns().find((c) => c.date === todayISO()) ?? null;
+      const result = await coach({
+        data: {
+          task,
+          mood: today?.mood ?? null,
+          focus: today?.focus ?? null,
+          energy: today?.energy ?? null,
+          subtype,
+        },
+      });
+      setCoaches((c) => ({ ...c, [task]: result as Coach }));
+      setOpenCoach((o) => ({ ...o, [task]: true }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      const friendly = msg.includes("429")
+        ? "Lots of requests right now — try again in a moment."
+        : msg.includes("402")
+          ? "AI credits ran out. Top up in workspace settings."
+          : "Couldn't get advice. Try again?";
+      setCoachErr((e) => ({ ...e, [task]: friendly }));
+    } finally {
+      setCoachLoading(null);
+    }
   }
 
   async function suggest() {
@@ -1509,26 +1555,78 @@ function NudgeCard({ subtype }: { subtype: string }) {
           </button>
         </div>
         {tasks.length > 0 ? (
-          <ul className="mt-3 space-y-1.5">
-            {tasks.map((t, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-2 rounded-xl border border-border bg-background/60 px-3 py-2"
-              >
-                <span className="mt-0.5 text-xs font-semibold text-muted-foreground">
-                  {i + 1}
-                </span>
-                <span className="flex-1 text-sm text-foreground">{t}</span>
-                <button
-                  type="button"
-                  onClick={() => removeTask(i)}
-                  aria-label={`Remove ${t}`}
-                  className="rounded-md px-2 text-xs text-muted-foreground transition hover:text-destructive"
+          <ul className="mt-3 space-y-2">
+            {tasks.map((t, i) => {
+              const c = coaches[t];
+              const open = !!openCoach[t];
+              const isLoading = coachLoading === t;
+              const tErr = coachErr[t];
+              return (
+                <li
+                  key={i}
+                  className="rounded-xl border border-border bg-background/60"
                 >
-                  Remove
-                </button>
-              </li>
-            ))}
+                  <div className="flex items-start gap-2 px-3 py-2">
+                    <span className="mt-0.5 text-xs font-semibold text-muted-foreground">
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 text-sm text-foreground">{t}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTask(i)}
+                      aria-label={`Remove ${t}`}
+                      className="rounded-md px-2 text-xs text-muted-foreground transition hover:text-destructive"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 border-t border-border/60 px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        c
+                          ? setOpenCoach((o) => ({ ...o, [t]: !o[t] }))
+                          : coachOne(t)
+                      }
+                      disabled={isLoading}
+                      className="text-xs font-medium text-primary transition hover:opacity-80 disabled:opacity-50"
+                    >
+                      {isLoading
+                        ? "Coaching…"
+                        : c
+                          ? open
+                            ? "Hide advice"
+                            : "Show advice"
+                          : "How should I approach this?"}
+                    </button>
+                    {c && (
+                      <button
+                        type="button"
+                        onClick={() => coachOne(t)}
+                        disabled={isLoading}
+                        className="text-[11px] text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+                      >
+                        Refresh
+                      </button>
+                    )}
+                  </div>
+                  {tErr && (
+                    <p className="px-3 pb-2 text-xs text-destructive">{tErr}</p>
+                  )}
+                  {c && open && (
+                    <div className="space-y-2 border-t border-border/60 bg-primary/[0.04] px-3 py-3 text-sm">
+                      <CoachField label="Approach" value={c.approach} />
+                      <CoachField label="5-min start" value={c.firstStep} highlight />
+                      <CoachField label="Watch out for" value={c.pitfall} />
+                      <CoachField label="If you get stuck" value={c.ifStuck} />
+                      <p className="pt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Based on {c.reference}
+                      </p>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="mt-3 text-xs text-muted-foreground">
@@ -1562,6 +1660,32 @@ function NudgeCard({ subtype }: { subtype: string }) {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function CoachField({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={
+          "mt-0.5 text-sm leading-snug text-foreground " +
+          (highlight ? "rounded-lg bg-primary/10 px-2 py-1.5 font-medium" : "")
+        }
+      >
+        {value}
+      </p>
     </div>
   );
 }
