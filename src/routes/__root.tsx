@@ -4,10 +4,14 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
+  useNavigate,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { TabBar } from "@/components/tab-bar";
+import { isOnboarded } from "@/lib/adhd-shared";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -77,11 +81,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Steady — ADHD self-management (UK)" },
+      { name: "description", content: "Mobile app for adults with ADHD in the UK: WHO ASRS screener, daily mood tracking, adaptive tasks, AI coach, and NHS signposting (NICE NG87)." },
+      { name: "theme-color", content: "#0f1b3d" },
+      { property: "og:title", content: "Steady — ADHD self-management (UK)" },
+      { property: "og:description", content: "ASRS screener, mood tracking, adaptive tasks, AI coach, NHS signposting." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -115,11 +119,25 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  // First-launch redirect: if the user has never finished onboarding,
+  // send them there from any tabbed screen. The /onboarding route itself
+  // is always accessible (for retake).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (pathname.startsWith("/onboarding")) return;
+    if (!isOnboarded()) {
+      navigate({ to: "/onboarding", replace: true });
+    }
+  }, [pathname, navigate]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <TabBar />
     </QueryClientProvider>
   );
 }
