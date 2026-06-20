@@ -742,10 +742,17 @@ function QuestionCard({
               >
                 {idx + 1}
               </span>
-              <span className="text-2xl" aria-hidden>
-                {s.emoji}
+              <span className="flex-1">
+                <span className="block text-base font-medium leading-tight">{s.label}</span>
+                <span
+                  className={
+                    "block text-xs " +
+                    (selected ? "text-primary-foreground/80" : "text-muted-foreground")
+                  }
+                >
+                  {s.hint}
+                </span>
               </span>
-              <span className="flex-1 text-base font-medium">{s.label}</span>
               <span
                 className={
                   "text-xs uppercase tracking-wider transition-opacity " +
