@@ -116,6 +116,7 @@ function OnboardingRoute() {
     saveOnboardingResult({
       onboarding,
       result,
+      answers,
       completedAt: new Date().toISOString(),
     });
     navigate({ to: "/", replace: true });
