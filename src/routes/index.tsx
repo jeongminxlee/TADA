@@ -71,7 +71,7 @@ const OnboardingSchema = z.object({
     .max(120, "Enter a realistic age"),
   meds: z.enum(["none", "considering", "current", "former"]),
 });
-type Onboarding = z.infer<typeof OnboardingSchema>;
+type OnboardingData = z.infer<typeof OnboardingSchema>;
 
 type Answers = Record<string, number | null>;
 
@@ -236,7 +236,7 @@ function Index() {
   const [answers, setAnswers] = useState<Answers>({});
   const [step, setStep] = useState(0); // 0..total-1 = questions, total = results, -1 = intro
   const [phase, setPhase] = useState<"intro" | "onboarding" | "quiz">("intro");
-  const [onboarding, setOnboarding] = useState<Onboarding | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingData | null>(null);
   const [pulse, setPulse] = useState(0);
 
   const started = phase === "quiz";
@@ -330,9 +330,9 @@ function Index() {
         {phase === "intro" ? (
           <Intro onStart={() => setPhase("onboarding")} />
         ) : phase === "onboarding" ? (
-          <Onboarding
+          <OnboardingStep
             initial={onboarding}
-            onSubmit={(data) => {
+            onSubmit={(data: OnboardingData) => {
               setOnboarding(data);
               setPhase("quiz");
             }}
