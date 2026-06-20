@@ -929,6 +929,8 @@ function Results({
 
       <CheckInCard />
 
+      <NudgeCard subtype={result.subtype} />
+
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
