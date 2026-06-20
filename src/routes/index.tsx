@@ -411,7 +411,7 @@ function Index() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <BackgroundBlobs />
-      <div className="relative mx-auto flex min-h-screen max-w-2xl flex-col px-6 py-8 sm:py-12">
+      <div className="relative mx-auto flex min-h-[100dvh] max-w-md flex-col px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-[max(env(safe-area-inset-top),1.5rem)] sm:max-w-lg sm:px-6">
         {phase === "intro" ? (
           <Intro onStart={() => setPhase("onboarding")} />
         ) : phase === "onboarding" ? (
