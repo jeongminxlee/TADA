@@ -2140,3 +2140,115 @@ export function CoachField({
     </div>
   );
 }
+
+// ---- Onboarding result persistence ----
+export const ONBOARDING_KEY = "adhd-onboarding-result-v1";
+export const ONBOARDED_FLAG = "adhd-onboarded-v1";
+
+export type ResultPayload = {
+  inattCount: number;
+  hyperCount: number;
+  inattMet: boolean;
+  hyperMet: boolean;
+  subtype: string;
+  description: string;
+  key: "inattentive" | "hyperactive" | "combined" | "below";
+  threshold: number;
+  partAShaded: number;
+  partAPositive: boolean;
+};
+
+export type StoredOnboarding = {
+  onboarding: OnboardingData;
+  result: ResultPayload;
+  completedAt: string;
+};
+
+export function loadOnboardingResult(): StoredOnboarding | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(ONBOARDING_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredOnboarding;
+  } catch {
+    return null;
+  }
+}
+
+export function saveOnboardingResult(p: StoredOnboarding) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(ONBOARDING_KEY, JSON.stringify(p));
+  localStorage.setItem(ONBOARDED_FLAG, "1");
+  window.dispatchEvent(new CustomEvent("adhd-onboarding-changed"));
+}
+
+export function clearOnboarding() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(ONBOARDING_KEY);
+  localStorage.removeItem(ONBOARDED_FLAG);
+  window.dispatchEvent(new CustomEvent("adhd-onboarding-changed"));
+}
+
+export function isOnboarded(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(ONBOARDED_FLAG) === "1";
+}
+
+export function useOnboardingResult(): StoredOnboarding | null {
+  const [v, setV] = useState<StoredOnboarding | null>(() => loadOnboardingResult());
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const refresh = () => setV(loadOnboardingResult());
+    window.addEventListener("adhd-onboarding-changed", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("adhd-onboarding-changed", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+  return v;
+}
+
+// Plain-English psychoeducation by ASRS-mapped subtype. Sourced from
+// NICE NG87, Safren CBT-ADHD modules, and Barkley (2012).
+export const PSYCHOED: Record<
+  "inattentive" | "hyperactive" | "combined" | "below",
+  { title: string; tagline: string; body: string[]; refs: string }
+> = {
+  inattentive: {
+    title: "Predominantly Inattentive",
+    tagline: "Attention, working memory and follow-through carry most of the load.",
+    body: [
+      "You're more likely to lose track of details, drift off mid-task, and forget commitments — not because you don't care, but because the brain's attention-control system is under-firing.",
+      "What helps: externalise everything (single inbox, written priorities), shorten the gap between intention and action (timers, body-doubling), and reduce decision load in the morning.",
+    ],
+    refs: "Safren CBT-ADHD · Barkley 2012 · NICE NG87",
+  },
+  hyperactive: {
+    title: "Predominantly Hyperactive-Impulsive",
+    tagline: "Restlessness and impulsivity show up more than inattention.",
+    body: [
+      "You're more likely to act before thinking, interrupt, fidget, or feel driven by an internal motor. Suppressing it usually backfires — channelling it works better.",
+      "What helps: daily movement, structured breaks, a 10-second pause before sending or saying yes, and protected wind-down time so sleep doesn't amplify impulsivity the next day.",
+    ],
+    refs: "CHADD · Barkley 2012 · NICE NG87",
+  },
+  combined: {
+    title: "Combined Presentation",
+    tagline: "Both inattention and hyperactivity-impulsivity meet threshold.",
+    body: [
+      "You get the attention-regulation challenges and the impulsivity/restlessness challenges. Plans need to support both — protect attention AND give the body an outlet.",
+      "What helps: move first, then plan; time-box work in 25/5 cycles; keep a 'parking lot' for stray thoughts; pause before commitments.",
+    ],
+    refs: "Safren CBT-ADHD · Barkley 2012 · NICE NG87",
+  },
+  below: {
+    title: "Below the DSM-5 symptom threshold",
+    tagline: "Your responses don't meet the DSM-5 symptom count for ADHD.",
+    body: [
+      "Symptoms can still affect day-to-day life even below threshold. Tracking mood and using the executive-function tools in this app may still help.",
+      "If symptoms cause distress or impairment, your GP can refer you for a full NHS assessment under NICE NG87.",
+    ],
+    refs: "NICE NG87",
+  },
+};
