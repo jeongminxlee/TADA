@@ -974,6 +974,8 @@ function Results({
         </div>
       </div>
 
+      <MoodReminderBanner />
+      <MoodCard />
       <CheckInCard />
 
       <NudgeCard subtype={result.subtype} />
