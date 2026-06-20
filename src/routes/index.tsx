@@ -343,6 +343,82 @@ function ageThreshold(age: number) {
   return age < 17 ? 6 : 5;
 }
 
+// Adaptive task derived from the latest daily check-in. We translate the
+// user's current mood / focus / energy / state tags into a single
+// evidence-aligned action drawn from the same literature as the static
+// plan (Safren CBT-ADHD, Barkley 2012, NICE NG87). This is what makes the
+// dashboard responsive to symptom changes day-to-day.
+function adaptiveTask(c: CheckIn | null): { task: Task; reason: string } | null {
+  if (!c) return null;
+  const tags = (c.tags ?? []).map((t) => t.toLowerCase());
+  const has = (t: string) => tags.includes(t);
+
+  if (has("overwhelmed") || has("anxious")) {
+    return {
+      task: {
+        title: "Brain-dump for 3 minutes, then circle one thing",
+        why: "Externalising everything on your mind reduces cognitive load and lowers anxiety before choosing a next step (CBT-ADHD).",
+      },
+      reason: `You logged feeling ${tags.find((t) => t === "overwhelmed" || t === "anxious")} today.`,
+    };
+  }
+  if (has("restless") || has("wired")) {
+    return {
+      task: {
+        title: "Take a 5-minute brisk walk, then start the next task",
+        why: "Short movement bursts down-regulate hyperarousal and improve response inhibition for the next 20–30 minutes.",
+      },
+      reason: "You logged restless/wired energy — channel it before sitting back down.",
+    };
+  }
+  if (has("low") || (c.mood !== null && c.mood !== undefined && c.mood <= 2)) {
+    return {
+      task: {
+        title: "Pick the smallest possible 2-minute task and do it now",
+        why: "On low-mood days, momentum from a tiny win is more reliable than willpower (behavioural activation; CBT-ADHD).",
+      },
+      reason: "Your mood check-in is low today — keep the bar small.",
+    };
+  }
+  if (c.energy !== null && c.energy !== undefined && c.energy <= 2) {
+    return {
+      task: {
+        title: "Shrink today's top task to one 10-minute slice",
+        why: "Matching task size to current energy prevents the all-or-nothing crash typical in ADHD low-energy days.",
+      },
+      reason: "Energy is low — work with it, not against it.",
+    };
+  }
+  if (c.focus !== null && c.focus !== undefined && c.focus >= 4) {
+    return {
+      task: {
+        title: "Ride the focus — start the hardest task in a 25-min block",
+        why: "Protect rare high-focus windows for high-effort work; this is the highest-yield use of executive function (Barkley, 2012).",
+      },
+      reason: "Focus is high — spend it on what matters most.",
+    };
+  }
+  if (has("hyperfocused")) {
+    return {
+      task: {
+        title: "Set a 45-minute alarm and a transition cue",
+        why: "Hyperfocus is productive but blocks task-switching; an external stop signal prevents over-running other commitments.",
+      },
+      reason: "You're in hyperfocus — protect it without losing the day.",
+    };
+  }
+  if (has("scattered") || (c.focus !== null && c.focus !== undefined && c.focus <= 2)) {
+    return {
+      task: {
+        title: "Write your next single action on paper, then start a 10-min timer",
+        why: "A visible cue plus an external timer compensates for scattered attention better than re-reading a long list.",
+      },
+      reason: "Focus is scattered — make the next step external and concrete.",
+    };
+  }
+  return null;
+}
+
 function Index() {
   const total = QUESTIONS.length;
   const [answers, setAnswers] = useState<Answers>({});
@@ -921,11 +997,19 @@ function Results({
 }) {
   const basePlan = TASKS[result.key];
   const medTask = onboarding ? MED_TASK[onboarding.meds] : null;
-  const planTasks = medTask ? [...basePlan.tasks, medTask] : basePlan.tasks;
+  const [history] = useCheckIns();
+  const todayCheckIn = history.find((c) => c.date === todayISO()) ?? null;
+  const adaptive = adaptiveTask(todayCheckIn);
+  const planTasks: Task[] = [
+    ...(adaptive ? [adaptive.task] : []),
+    ...basePlan.tasks,
+    ...(medTask ? [medTask] : []),
+  ];
   const medLabel = onboarding
     ? MED_OPTIONS.find((m) => m.value === onboarding.meds)?.label
     : null;
-  const storageKey = `adhd-tasks-${result.key}-${onboarding?.meds ?? "x"}-${new Date()
+  const adaptiveFp = adaptive ? adaptive.task.title.slice(0, 24) : "none";
+  const storageKey = `adhd-tasks-${result.key}-${onboarding?.meds ?? "x"}-${adaptiveFp}-${new Date()
     .toISOString()
     .slice(0, 10)}`;
   const [done, setDone] = useState<Record<number, boolean>>(() => {
@@ -1104,10 +1188,28 @@ function Results({
           </div>
         </div>
 
+        {adaptive && (
+          <div className="mt-5 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
+              Adapting to today's check-in
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-foreground">
+              {adaptive.reason}
+            </p>
+          </div>
+        )}
+        {!adaptive && (
+          <p className="mt-5 text-xs text-muted-foreground">
+            Log today's mood in the Mood tab and this plan will adapt to how
+            you actually feel right now.
+          </p>
+        )}
+
         <ul className="mt-6 space-y-2.5">
           {planTasks.map((t, i) => {
             const checked = !!done[i];
-            const isMed = medTask && i === planTasks.length - 1;
+            const isAdaptive = !!adaptive && i === 0;
+            const isMed = !!medTask && i === planTasks.length - 1;
             return (
               <li key={i}>
                 <button
@@ -1132,6 +1234,11 @@ function Results({
                     ✓
                   </span>
                   <span className="flex-1">
+                    {isAdaptive && (
+                      <span className="mb-1 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">
+                        Adapted to today
+                      </span>
+                    )}
                     {isMed && (
                       <span className="mb-1 inline-block rounded-full bg-accent/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent-foreground">
                         Medication-tailored
