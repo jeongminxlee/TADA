@@ -9,9 +9,9 @@ import { suggestNudge, coachTask } from "@/lib/nudge.functions";
 // validated Part A screener; 4+ "shaded" responses indicates symptoms
 // highly consistent with adult ADHD. All 18 items map to the inattention
 // or hyperactive/impulsive domain for subtype scoring.
-type Domain = "Inattention" | "Hyperactivity & Impulsivity";
+export type Domain = "Inattention" | "Hyperactivity & Impulsivity";
 
-type AsrsItem = {
+export type AsrsItem = {
   num: number;            // official ASRS item number (1–18)
   text: string;           // item wording
   domain: Domain;         // for DSM subtype scoring
@@ -19,7 +19,7 @@ type AsrsItem = {
   shadeFrom?: 2 | 3;      // Part A only: lowest "shaded" response value
 };
 
-const ASRS: AsrsItem[] = [
+export const ASRS: AsrsItem[] = [
   // ---- Part A (validated screener) ----
   { num: 1, partA: true, shadeFrom: 2, domain: "Inattention",
     text: "How often do you have trouble wrapping up the final details of a project, once the challenging parts have been done?" },
@@ -60,7 +60,7 @@ const ASRS: AsrsItem[] = [
     text: "How often do you interrupt others when they are busy?" },
 ];
 
-const SCALE = [
+export const SCALE = [
   { label: "Never", hint: "Not really me", value: 0 },
   { label: "Rarely", hint: "Once in a while", value: 1 },
   { label: "Sometimes", hint: "Here and there", value: 2 },
@@ -72,11 +72,11 @@ const SCALE = [
 // often or very often (>= 3 on this 0–4 scale). The number-of-symptoms
 // threshold is age-dependent: children/adolescents <17 need 6+, adults
 // (17+) need 5+ in a domain (DSM-5, APA 2013).
-const COUNT_THRESHOLD = 3;
+export const COUNT_THRESHOLD = 3;
 
-type MedStatus = "none" | "considering" | "current" | "former";
+export type MedStatus = "none" | "considering" | "current" | "former";
 
-const MED_OPTIONS: { value: MedStatus; label: string; hint: string }[] = [
+export const MED_OPTIONS: { value: MedStatus; label: string; hint: string }[] = [
   { value: "none", label: "Not on medication", hint: "Never been prescribed" },
   { value: "considering", label: "Considering / pending eval", hint: "Looking into it" },
   { value: "current", label: "Currently taking", hint: "Stimulant or non-stimulant" },
@@ -85,7 +85,7 @@ const MED_OPTIONS: { value: MedStatus; label: string; hint: string }[] = [
 
 // Zod schema validates the onboarding payload on the client before we use
 // it to set thresholds and tailor tasks.
-const OnboardingSchema = z.object({
+export const OnboardingSchema = z.object({
   age: z
     .number({ invalid_type_error: "Enter your age as a number" })
     .int("Enter a whole number")
@@ -94,14 +94,14 @@ const OnboardingSchema = z.object({
   meds: z.enum(["none", "considering", "current", "former"]),
   otherMeds: z.enum(["yes", "no", "preferNot"]).optional(),
 });
-type OnboardingData = z.infer<typeof OnboardingSchema>;
+export type OnboardingData = z.infer<typeof OnboardingSchema>;
 
-type Answers = Record<string, number | null>;
+export type Answers = Record<string, number | null>;
 
-type Q = { key: string; text: string; domain: Domain; partA: boolean };
+export type Q = { key: string; text: string; domain: Domain; partA: boolean };
 
 // ----- Daily check-in -----
-const CheckInSchema = z.object({
+export const CheckInSchema = z.object({
   date: z.string(), // YYYY-MM-DD
   mood: z.number().int().min(1).max(5),
   focus: z.number().int().min(1).max(5).nullable().optional(),
@@ -109,15 +109,15 @@ const CheckInSchema = z.object({
   tags: z.array(z.string().min(1).max(24)).max(8).optional(),
   note: z.string().trim().max(280).optional(),
 });
-type CheckIn = z.infer<typeof CheckInSchema>;
+export type CheckIn = z.infer<typeof CheckInSchema>;
 
-const MOOD_LABELS = ["Rough", "Low", "Okay", "Good", "Great"];
-const FOCUS_LABELS = ["Scattered", "Foggy", "Okay", "Locked in", "Laser"];
-const ENERGY_LABELS = ["Empty", "Tired", "Steady", "Charged", "Buzzing"];
+export const MOOD_LABELS = ["Rough", "Low", "Okay", "Good", "Great"];
+export const FOCUS_LABELS = ["Scattered", "Foggy", "Okay", "Locked in", "Laser"];
+export const ENERGY_LABELS = ["Empty", "Tired", "Steady", "Charged", "Buzzing"];
 
 // Common ADHD-relevant mood / state tags. Curated so they're quick to scan
 // but cover the states people commonly want to note alongside a mood rating.
-const MOOD_TAGS = [
+export const MOOD_TAGS = [
   "anxious",
   "restless",
   "overwhelmed",
@@ -139,7 +139,7 @@ function emitCheckInChange() {
   window.dispatchEvent(new CustomEvent(CHECKIN_EVENT));
 }
 
-function useCheckIns(): [CheckIn[], (next: CheckIn[]) => void] {
+export function useCheckIns(): [CheckIn[], (next: CheckIn[]) => void] {
   const [history, setHistory] = useState<CheckIn[]>(() => loadCheckIns());
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -161,11 +161,11 @@ function useCheckIns(): [CheckIn[], (next: CheckIn[]) => void] {
 
 const CHECKIN_KEY = "adhd-checkins-v1";
 
-function todayISO() {
+export function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function loadCheckIns(): CheckIn[] {
+export function loadCheckIns(): CheckIn[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = JSON.parse(localStorage.getItem(CHECKIN_KEY) || "[]");
@@ -179,13 +179,13 @@ function loadCheckIns(): CheckIn[] {
   }
 }
 
-function saveCheckIns(list: CheckIn[]) {
+export function saveCheckIns(list: CheckIn[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(CHECKIN_KEY, JSON.stringify(list));
 }
 
 // Present items in their official ASRS order (Part A first).
-const QUESTIONS: Q[] = ASRS.map((it) => ({
+export const QUESTIONS: Q[] = ASRS.map((it) => ({
   key: `Q${it.num}`,
   text: it.text,
   domain: it.domain,
@@ -197,9 +197,9 @@ const QUESTIONS: Q[] = ASRS.map((it) => ({
 // function framework (2012), NICE guideline NG87, and CHADD clinical
 // summaries. Each task targets a mechanism shown to reduce functional
 // impairment in that symptom domain.
-type Task = { title: string; why: string };
+export type Task = { title: string; why: string };
 
-const TASKS: Record<
+export const TASKS: Record<
   "inattentive" | "hyperactive" | "combined" | "below",
   { headline: string; tasks: Task[] }
 > = {
@@ -310,7 +310,7 @@ const TASKS: Record<
 // Medication-specific reminders layered on top of the subtype plan.
 // Grounded in MTA follow-up data (Jensen et al., 2007), NICE NG87, and
 // CHADD guidance on combining pharmacological + behavioral treatment.
-const MED_TASK: Record<MedStatus, Task | null> = {
+export const MED_TASK: Record<MedStatus, Task | null> = {
   none: null,
   considering: {
     title: "Note one symptom example to share with a clinician",
@@ -326,7 +326,7 @@ const MED_TASK: Record<MedStatus, Task | null> = {
   },
 };
 
-function ageThreshold(age: number) {
+export function ageThreshold(age: number) {
   // DSM-5: 6+ symptoms for under 17, 5+ for 17 and older
   return age < 17 ? 6 : 5;
 }
@@ -336,7 +336,7 @@ function ageThreshold(age: number) {
 // evidence-aligned action drawn from the same literature as the static
 // plan (Safren CBT-ADHD, Barkley 2012, NICE NG87). This is what makes the
 // dashboard responsive to symptom changes day-to-day.
-function adaptiveTask(c: CheckIn | null): { task: Task; reason: string } | null {
+export function adaptiveTask(c: CheckIn | null): { task: Task; reason: string } | null {
   if (!c) return null;
   const tags = (c.tags ?? []).map((t) => t.toLowerCase());
   const has = (t: string) => tags.includes(t);
@@ -407,7 +407,7 @@ function adaptiveTask(c: CheckIn | null): { task: Task; reason: string } | null 
   return null;
 }
 
-function Index() {
+export function Index() {
   const total = QUESTIONS.length;
   const [answers, setAnswers] = useState<Answers>({});
   const [step, setStep] = useState(0); // 0..total-1 = questions, total = results, -1 = intro
@@ -567,7 +567,7 @@ function Index() {
   );
 }
 
-function BackgroundBlobs() {
+export function BackgroundBlobs() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
       <div className="absolute -top-32 -left-24 h-80 w-80 rounded-full bg-primary/15 blur-3xl animate-blob" />
@@ -577,7 +577,7 @@ function BackgroundBlobs() {
   );
 }
 
-function Intro({ onStart }: { onStart: () => void }) {
+export function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
@@ -613,7 +613,7 @@ function Intro({ onStart }: { onStart: () => void }) {
   );
 }
 
-function Feature({ label }: { label: string }) {
+export function Feature({ label }: { label: string }) {
   return (
     <li className="flex items-center gap-2 rounded-xl border border-border bg-card/60 px-3 py-2 backdrop-blur">
       <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
@@ -622,7 +622,7 @@ function Feature({ label }: { label: string }) {
   );
 }
 
-function OnboardingStep({
+export function OnboardingStep({
   initial,
   onSubmit,
   onBack,
@@ -797,7 +797,7 @@ function OnboardingStep({
   );
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
+export function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd className="mx-0.5 inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-md border border-border bg-card px-1.5 text-xs font-medium text-foreground shadow-sm">
       {children}
@@ -805,7 +805,7 @@ function Kbd({ children }: { children: React.ReactNode }) {
   );
 }
 
-function TopBar({
+export function TopBar({
   step,
   total,
   answered,
@@ -850,7 +850,7 @@ function TopBar({
   );
 }
 
-function QuestionCard({
+export function QuestionCard({
   q,
   current,
   onPick,
@@ -925,7 +925,7 @@ function QuestionCard({
   );
 }
 
-function NavBar({
+export function NavBar({
   step,
   total,
   answered,
@@ -963,7 +963,7 @@ function NavBar({
   );
 }
 
-function Results({
+export function Results({
   result,
   onReset,
   onboarding,
@@ -1299,7 +1299,7 @@ function Results({
   );
 }
 
-function ScoreCard({
+export function ScoreCard({
   label,
   count,
   met,
@@ -1333,14 +1333,14 @@ function ScoreCard({
   );
 }
 
-function entryAvg(c: CheckIn): number {
+export function entryAvg(c: CheckIn): number {
   const vals = [c.mood, c.focus ?? undefined, c.energy ?? undefined].filter(
     (v): v is number => typeof v === "number",
   );
   return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
 }
 
-function MoodReminderBanner() {
+export function MoodReminderBanner() {
   const [history] = useCheckIns();
   const todays = history.find((c) => c.date === todayISO());
   if (todays) return null;
@@ -1352,7 +1352,7 @@ function MoodReminderBanner() {
   );
 }
 
-function MoodCard() {
+export function MoodCard() {
   const [history, setHistory] = useCheckIns();
   const today = todayISO();
   const todays = history.find((c) => c.date === today) ?? null;
@@ -1471,7 +1471,7 @@ function MoodCard() {
   );
 }
 
-function CheckInCard() {
+export function CheckInCard() {
   const [history, setHistory] = useCheckIns();
   const today = todayISO();
   const todays = history.find((c) => c.date === today) ?? null;
@@ -1712,7 +1712,7 @@ function CheckInCard() {
   );
 }
 
-function Scale({
+export function Scale({
   label,
   labels,
   value,
@@ -1758,7 +1758,7 @@ function Scale({
   );
 }
 
-function Summary({
+export function Summary({
   label,
   word,
   value,
@@ -1778,7 +1778,7 @@ function Summary({
   );
 }
 
-function NhsNextSteps({ partAPositive }: { partAPositive: boolean }) {
+export function NhsNextSteps({ partAPositive }: { partAPositive: boolean }) {
   return (
     <div className="rounded-3xl border border-primary/30 bg-primary/5 p-8 shadow-sm">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
@@ -1827,7 +1827,7 @@ function NhsNextSteps({ partAPositive }: { partAPositive: boolean }) {
   );
 }
 
-function NhsLink({
+export function NhsLink({
   href,
   title,
   hint,
@@ -1866,7 +1866,7 @@ type Coach = {
   reference: string;
 };
 
-function NudgeCard({ subtype }: { subtype: string }) {
+export function NudgeCard({ subtype }: { subtype: string }) {
   const NUDGE_TASKS_KEY = "adhd-nudge-tasks-v1";
   const [tasks, setTasks] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
@@ -2115,7 +2115,7 @@ function NudgeCard({ subtype }: { subtype: string }) {
   );
 }
 
-function CoachField({
+export function CoachField({
   label,
   value,
   highlight,
