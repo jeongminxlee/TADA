@@ -469,7 +469,7 @@ function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
-        WHO ASRS v1.1 · adult ADHD screener
+        WHO ASRS v1.1 · adult ADHD screener · UK
       </p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-6xl">
         How does your brain run?
@@ -477,7 +477,8 @@ function Intro({ onStart }: { onStart: () => void }) {
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
         18 short questions, one at a time. No long forms, no scrolling walls
         of text. Tap an answer or press <Kbd>1</Kbd>–<Kbd>5</Kbd> — you can
-        change anything later. For reflection, not diagnosis.
+        change anything later. Aligned with NICE guideline NG87. For
+        reflection — only a GP or NHS specialist can diagnose ADHD.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
