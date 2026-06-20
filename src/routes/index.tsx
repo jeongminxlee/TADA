@@ -997,7 +997,14 @@ function Results({
 }) {
   const basePlan = TASKS[result.key];
   const medTask = onboarding ? MED_TASK[onboarding.meds] : null;
-  const planTasks = medTask ? [...basePlan.tasks, medTask] : basePlan.tasks;
+  const [history] = useCheckIns();
+  const todayCheckIn = history.find((c) => c.date === todayISO()) ?? null;
+  const adaptive = adaptiveTask(todayCheckIn);
+  const planTasks: Task[] = [
+    ...(adaptive ? [adaptive.task] : []),
+    ...basePlan.tasks,
+    ...(medTask ? [medTask] : []),
+  ];
   const medLabel = onboarding
     ? MED_OPTIONS.find((m) => m.value === onboarding.meds)?.label
     : null;
