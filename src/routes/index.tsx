@@ -6,9 +6,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "ADHD Self-Screener — DSM-5 Subtypes" },
-      { name: "description", content: "An informational self-screening questionnaire based on the DSM-5 criteria for ADHD subtypes. Not a diagnosis." },
+      { name: "description", content: "Adult ADHD self-screener based on the WHO ASRS v1.1 with DSM-5 subtype scoring. Informational, not a diagnosis." },
       { property: "og:title", content: "ADHD Self-Screener — DSM-5 Subtypes" },
-      { property: "og:description", content: "Reflect on inattentive and hyperactive-impulsive symptoms using DSM-5 criteria." },
+      { property: "og:description", content: "Take the WHO ASRS v1.1 adult ADHD screener with subtype scoring and daily check-ins." },
     ],
   }),
   component: Index,
