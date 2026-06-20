@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoodRouteImport } from './routes/mood'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TasksRoute = TasksRouteImport.update({
@@ -29,6 +30,11 @@ const MoodRoute = MoodRouteImport.update({
   path: '/mood',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,12 +43,14 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
   '/tasks': typeof TasksRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
   '/tasks': typeof TasksRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
   '/tasks': typeof TasksRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/mood' | '/onboarding' | '/tasks'
+  fullPaths: '/' | '/calendar' | '/mood' | '/onboarding' | '/tasks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/mood' | '/onboarding' | '/tasks'
-  id: '__root__' | '/' | '/mood' | '/onboarding' | '/tasks'
+  to: '/' | '/calendar' | '/mood' | '/onboarding' | '/tasks'
+  id: '__root__' | '/' | '/calendar' | '/mood' | '/onboarding' | '/tasks'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CalendarRoute: typeof CalendarRoute
   MoodRoute: typeof MoodRoute
   OnboardingRoute: typeof OnboardingRoute
   TasksRoute: typeof TasksRoute
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MoodRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CalendarRoute: CalendarRoute,
   MoodRoute: MoodRoute,
   OnboardingRoute: OnboardingRoute,
   TasksRoute: TasksRoute,
