@@ -6,36 +6,68 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "ADHD Self-Screener — DSM-5 Subtypes" },
-      { name: "description", content: "An informational self-screening questionnaire based on the DSM-5 criteria for ADHD subtypes. Not a diagnosis." },
+      { name: "description", content: "Adult ADHD self-screener based on the WHO ASRS v1.1 with DSM-5 subtype scoring. Informational, not a diagnosis." },
       { property: "og:title", content: "ADHD Self-Screener — DSM-5 Subtypes" },
-      { property: "og:description", content: "Reflect on inattentive and hyperactive-impulsive symptoms using DSM-5 criteria." },
+      { property: "og:description", content: "Take the WHO ASRS v1.1 adult ADHD screener with subtype scoring and daily check-ins." },
     ],
   }),
   component: Index,
 });
 
-const INATTENTION = [
-  "Often fails to give close attention to details or makes careless mistakes",
-  "Often has difficulty sustaining attention in tasks or play",
-  "Often does not seem to listen when spoken to directly",
-  "Often does not follow through on instructions and fails to finish tasks",
-  "Often has difficulty organizing tasks and activities",
-  "Often avoids or dislikes tasks that require sustained mental effort",
-  "Often loses things necessary for tasks or activities",
-  "Is often easily distracted by extraneous stimuli or unrelated thoughts",
-  "Is often forgetful in daily activities",
-];
+// WHO Adult ADHD Self-Report Scale (ASRS v1.1) — Kessler et al., 2005.
+// The 18-item adult-worded version of the DSM criteria. Items 1–6 form the
+// validated Part A screener; 4+ "shaded" responses indicates symptoms
+// highly consistent with adult ADHD. All 18 items map to the inattention
+// or hyperactive/impulsive domain for subtype scoring.
+type Domain = "Inattention" | "Hyperactivity & Impulsivity";
 
-const HYPERACTIVITY = [
-  "Often fidgets with or taps hands or feet, or squirms in seat",
-  "Often leaves seat in situations when remaining seated is expected",
-  "Often runs about or feels restless in situations where it is inappropriate",
-  "Often unable to play or engage in leisure activities quietly",
-  "Is often 'on the go' acting as if 'driven by a motor'",
-  "Often talks excessively",
-  "Often blurts out an answer before a question has been completed",
-  "Often has difficulty waiting their turn",
-  "Often interrupts or intrudes on others",
+type AsrsItem = {
+  num: number;            // official ASRS item number (1–18)
+  text: string;           // item wording
+  domain: Domain;         // for DSM subtype scoring
+  partA: boolean;         // belongs to the validated 6-item screener
+  shadeFrom?: 2 | 3;      // Part A only: lowest "shaded" response value
+};
+
+const ASRS: AsrsItem[] = [
+  // ---- Part A (validated screener) ----
+  { num: 1, partA: true, shadeFrom: 2, domain: "Inattention",
+    text: "How often do you have trouble wrapping up the final details of a project, once the challenging parts have been done?" },
+  { num: 2, partA: true, shadeFrom: 2, domain: "Inattention",
+    text: "How often do you have difficulty getting things in order when you have to do a task that requires organization?" },
+  { num: 3, partA: true, shadeFrom: 2, domain: "Inattention",
+    text: "How often do you have problems remembering appointments or obligations?" },
+  { num: 4, partA: true, shadeFrom: 3, domain: "Inattention",
+    text: "When you have a task that requires a lot of thought, how often do you avoid or delay getting started?" },
+  { num: 5, partA: true, shadeFrom: 3, domain: "Hyperactivity & Impulsivity",
+    text: "How often do you fidget or squirm with your hands or feet when you have to sit down for a long time?" },
+  { num: 6, partA: true, shadeFrom: 3, domain: "Hyperactivity & Impulsivity",
+    text: "How often do you feel overly active and compelled to do things, like you were driven by a motor?" },
+  // ---- Part B ----
+  { num: 7, partA: false, domain: "Inattention",
+    text: "How often do you make careless mistakes when you have to work on a boring or difficult project?" },
+  { num: 8, partA: false, domain: "Inattention",
+    text: "How often do you have difficulty keeping your attention when you are doing boring or repetitive work?" },
+  { num: 9, partA: false, domain: "Inattention",
+    text: "How often do you have difficulty concentrating on what people say to you, even when they are speaking to you directly?" },
+  { num: 10, partA: false, domain: "Inattention",
+    text: "How often do you misplace or have difficulty finding things at home or at work?" },
+  { num: 11, partA: false, domain: "Inattention",
+    text: "How often are you distracted by activity or noise around you?" },
+  { num: 12, partA: false, domain: "Hyperactivity & Impulsivity",
+    text: "How often do you leave your seat in meetings or other situations in which you are expected to remain seated?" },
+  { num: 13, partA: false, domain: "Hyperactivity & Impulsivity",
+    text: "How often do you feel restless or fidgety?" },
+  { num: 14, partA: false, domain: "Hyperactivity & Impulsivity",
+    text: "How often do you have difficulty unwinding and relaxing when you have time to yourself?" },
+  { num: 15, partA: false, domain: "Hyperactivity & Impulsivity",
+    text: "How often do you find yourself talking too much when you are in social situations?" },
+  { num: 16, partA: false, domain: "Hyperactivity & Impulsivity",
+    text: "How often, when you're in a conversation, do you find yourself finishing the sentences of the people you are talking to before they can finish them themselves?" },
+  { num: 17, partA: false, domain: "Hyperactivity & Impulsivity",
+    text: "How often do you have difficulty waiting your turn in situations when turn-taking is required?" },
+  { num: 18, partA: false, domain: "Hyperactivity & Impulsivity",
+    text: "How often do you interrupt others when they are busy?" },
 ];
 
 const SCALE = [
@@ -75,7 +107,7 @@ type OnboardingData = z.infer<typeof OnboardingSchema>;
 
 type Answers = Record<string, number | null>;
 
-type Q = { key: string; prefix: "I" | "H"; text: string; domain: string };
+type Q = { key: string; text: string; domain: Domain; partA: boolean };
 
 // ----- Daily check-in -----
 const CheckInSchema = z.object({
@@ -116,20 +148,13 @@ function saveCheckIns(list: CheckIn[]) {
   localStorage.setItem(CHECKIN_KEY, JSON.stringify(list));
 }
 
-const QUESTIONS: Q[] = [
-  ...INATTENTION.map((text, i) => ({
-    key: `I${i}`,
-    prefix: "I" as const,
-    text,
-    domain: "Inattention",
-  })),
-  ...HYPERACTIVITY.map((text, i) => ({
-    key: `H${i}`,
-    prefix: "H" as const,
-    text,
-    domain: "Hyperactivity & Impulsivity",
-  })),
-];
+// Present items in their official ASRS order (Part A first).
+const QUESTIONS: Q[] = ASRS.map((it) => ({
+  key: `Q${it.num}`,
+  text: it.text,
+  domain: it.domain,
+  partA: it.partA,
+}));
 
 // Daily tasks drawn from clinical literature on ADHD management:
 // CBT for adult ADHD (Safren et al., 2005, 2010), Barkley's executive
@@ -286,12 +311,22 @@ function Index() {
   const progress = Math.round((answered / total) * 100);
 
   const result = useMemo(() => {
-    const inattCount = INATTENTION.filter(
-      (_, i) => (answers[`I${i}`] ?? -1) >= COUNT_THRESHOLD,
+    const inattItems = ASRS.filter((i) => i.domain === "Inattention");
+    const hyperItems = ASRS.filter((i) => i.domain === "Hyperactivity & Impulsivity");
+
+    const inattCount = inattItems.filter(
+      (it) => (answers[`Q${it.num}`] ?? -1) >= COUNT_THRESHOLD,
     ).length;
-    const hyperCount = HYPERACTIVITY.filter(
-      (_, i) => (answers[`H${i}`] ?? -1) >= COUNT_THRESHOLD,
+    const hyperCount = hyperItems.filter(
+      (it) => (answers[`Q${it.num}`] ?? -1) >= COUNT_THRESHOLD,
     ).length;
+
+    // ASRS Part A validated screener: 4+ "shaded" answers across items 1–6.
+    const partAItems = ASRS.filter((i) => i.partA);
+    const partAShaded = partAItems.filter(
+      (it) => (answers[`Q${it.num}`] ?? -1) >= (it.shadeFrom ?? 3),
+    ).length;
+    const partAPositive = partAShaded >= 4;
 
     const inattMet = inattCount >= threshold;
     const hyperMet = hyperCount >= threshold;
@@ -317,7 +352,18 @@ function Index() {
         "You endorsed enough hyperactive-impulsive symptoms to meet the DSM-5 threshold, without reaching it for the inattentive domain.";
     }
 
-    return { inattCount, hyperCount, inattMet, hyperMet, subtype, description, key, threshold };
+    return {
+      inattCount,
+      hyperCount,
+      inattMet,
+      hyperMet,
+      subtype,
+      description,
+      key,
+      threshold,
+      partAShaded,
+      partAPositive,
+    };
   }, [answers, threshold]);
 
   function pick(value: number) {
@@ -423,15 +469,16 @@ function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
-        DSM-5 self-screener
+        WHO ASRS v1.1 · adult ADHD screener
       </p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-6xl">
         How does your brain run?
       </h1>
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-        18 quick questions, one at a time. Use the buttons, tap a number key
-        <Kbd>1</Kbd>–<Kbd>5</Kbd>, or arrow back if you change your mind. Built
-        around the DSM-5 criteria — for reflection, not diagnosis.
+        The 18-item Adult ADHD Self-Report Scale from the World Health
+        Organization (Kessler et al., 2005). One question at a time — tap a
+        number key <Kbd>1</Kbd>–<Kbd>5</Kbd>, or arrow back to change an
+        answer. For reflection, not diagnosis.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
@@ -768,6 +815,8 @@ function Results({
     description: string;
     key: "inattentive" | "hyperactive" | "combined" | "below";
     threshold: number;
+    partAShaded: number;
+    partAPositive: boolean;
   };
   onReset: () => void;
   onboarding: OnboardingData | null;
@@ -798,6 +847,39 @@ function Results({
 
   return (
     <div className="space-y-8 py-8 animate-fade-up">
+      <div
+        className={
+          "rounded-3xl border p-6 shadow-sm transition " +
+          (result.partAPositive
+            ? "border-primary/40 bg-primary/5"
+            : "border-border bg-card")
+        }
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+              ASRS v1.1 · Part A screener
+            </p>
+            <h3 className="mt-1 text-lg font-semibold">
+              {result.partAPositive
+                ? "Symptoms highly consistent with adult ADHD"
+                : "Below the Part A screening threshold"}
+            </h3>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-semibold tracking-tight">
+              {result.partAShaded}
+            </span>
+            <span className="text-sm text-muted-foreground">/ 6 shaded</span>
+          </div>
+        </div>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          The WHO-validated Part A screener (Kessler et al., 2005) flags scores
+          of 4 or more "shaded" responses as warranting further clinical
+          evaluation. This is not a diagnosis.
+        </p>
+      </div>
+
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
           🎉 Your result
@@ -912,13 +994,17 @@ function Results({
       </div>
 
       <div className="rounded-2xl bg-accent/40 p-6 text-sm leading-relaxed text-accent-foreground">
-        <strong className="font-semibold">A note on interpretation.</strong> This
-        screener counts a symptom toward the DSM-5 threshold when you answered
-        “often” or “very often.” Your threshold of <strong>{result.threshold}+</strong>{" "}
-        reflects the DSM-5 rule for your age group (6+ under 17, 5+ for 17 and older).
-        A diagnosis also requires
-        onset before age 12, symptoms in 2+ settings, and clinically significant
-        impairment — only a qualified clinician can establish that.
+        <strong className="font-semibold">How this is scored.</strong> Items
+        come from the WHO Adult ADHD Self-Report Scale (ASRS v1.1, Kessler et
+        al., 2005). Part A (items 1–6) is the validated 6-item screener with
+        item-specific "shaded" thresholds — 4 or more shaded answers indicates
+        symptoms highly consistent with adult ADHD. All 18 items also map to
+        DSM-5 inattentive and hyperactive-impulsive symptom counts; your
+        threshold of <strong>{result.threshold}+</strong> reflects the DSM-5
+        age rule (6+ under 17, 5+ for 17 and older). Diagnosis also requires
+        onset before age 12, symptoms in 2+ settings, and clinically
+        significant impairment — only a qualified clinician can establish
+        that.
       </div>
 
       <div className="flex flex-wrap gap-3">
