@@ -970,3 +970,247 @@ function ScoreCard({
     </div>
   );
 }
+
+function CheckInCard() {
+  const [history, setHistory] = useState<CheckIn[]>(() => loadCheckIns());
+  const today = todayISO();
+  const todays = history.find((c) => c.date === today) ?? null;
+
+  const [mood, setMood] = useState<number | null>(todays?.mood ?? null);
+  const [focus, setFocus] = useState<number | null>(todays?.focus ?? null);
+  const [energy, setEnergy] = useState<number | null>(todays?.energy ?? null);
+  const [note, setNote] = useState<string>(todays?.note ?? "");
+  const [saved, setSaved] = useState(!!todays);
+  const [err, setErr] = useState<string | null>(null);
+
+  function save() {
+    const parsed = CheckInSchema.safeParse({
+      date: today,
+      mood,
+      focus,
+      energy,
+      note: note.trim() || undefined,
+    });
+    if (!parsed.success) {
+      setErr("Pick a rating for mood, focus, and energy.");
+      return;
+    }
+    setErr(null);
+    const next = [
+      ...history.filter((c) => c.date !== today),
+      parsed.data,
+    ].sort((a, b) => a.date.localeCompare(b.date));
+    setHistory(next);
+    saveCheckIns(next);
+    setSaved(true);
+  }
+
+  function edit() {
+    setSaved(false);
+  }
+
+  // Last 7 days for the trend strip
+  const last7: (CheckIn | null)[] = useMemo(() => {
+    const out: (CheckIn | null)[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      out.push(history.find((c) => c.date === iso) ?? null);
+    }
+    return out;
+  }, [history]);
+
+  return (
+    <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+            Daily check-in
+          </p>
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+            How is today going?
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            One snapshot a day. Tracking mood and symptoms over time helps you
+            and any clinician spot patterns (NICE NG87).
+          </p>
+        </div>
+        {saved && (
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            ✓ Logged today
+          </span>
+        )}
+      </div>
+
+      {!saved ? (
+        <div className="mt-6 space-y-5">
+          <Scale
+            label="Mood"
+            emojis={MOOD_EMOJI}
+            value={mood}
+            onChange={setMood}
+          />
+          <Scale
+            label="Focus"
+            emojis={FOCUS_EMOJI}
+            value={focus}
+            onChange={setFocus}
+          />
+          <Scale
+            label="Energy"
+            emojis={ENERGY_EMOJI}
+            value={energy}
+            onChange={setEnergy}
+          />
+
+          <div>
+            <label
+              htmlFor="note"
+              className="block text-sm font-medium text-foreground"
+            >
+              Note (optional)
+            </label>
+            <textarea
+              id="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value.slice(0, 280))}
+              rows={2}
+              placeholder="One sentence about today…"
+              className="mt-2 w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+              maxLength={280}
+            />
+            <div className="mt-1 text-right text-[11px] text-muted-foreground">
+              {note.length}/280
+            </div>
+          </div>
+
+          {err && <p className="text-xs text-destructive">{err}</p>}
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={save}
+              className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20 transition hover:opacity-90"
+            >
+              Save check-in
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <Summary label="Mood" emoji={MOOD_EMOJI[(todays?.mood ?? mood ?? 1) - 1]} value={todays?.mood ?? mood!} />
+          <Summary label="Focus" emoji={FOCUS_EMOJI[(todays?.focus ?? focus ?? 1) - 1]} value={todays?.focus ?? focus!} />
+          <Summary label="Energy" emoji={ENERGY_EMOJI[(todays?.energy ?? energy ?? 1) - 1]} value={todays?.energy ?? energy!} />
+          {(todays?.note || note) && (
+            <p className="sm:col-span-3 rounded-xl bg-background p-3 text-sm italic text-muted-foreground">
+              “{todays?.note ?? note}”
+            </p>
+          )}
+          <div className="sm:col-span-3 flex justify-end">
+            <button
+              type="button"
+              onClick={edit}
+              className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+            >
+              Edit today's check-in
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-8">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Last 7 days
+        </p>
+        <div className="grid grid-cols-7 gap-1.5">
+          {last7.map((c, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (6 - i));
+            const day = d.toLocaleDateString(undefined, { weekday: "narrow" });
+            const avg = c ? (c.mood + c.focus + c.energy) / 3 : 0;
+            return (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div className="flex h-16 w-full items-end overflow-hidden rounded-lg bg-muted/60">
+                  {c ? (
+                    <div
+                      className="w-full rounded-lg bg-primary/70 transition-all"
+                      style={{ height: `${(avg / 5) * 100}%` }}
+                      title={`Mood ${c.mood} · Focus ${c.focus} · Energy ${c.energy}`}
+                    />
+                  ) : null}
+                </div>
+                <span className="text-[10px] text-muted-foreground">{day}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Scale({
+  label,
+  emojis,
+  value,
+  onChange,
+}: {
+  label: string;
+  emojis: string[];
+  value: number | null;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground">
+          {value ? `${value}/5` : "—"}
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-5 gap-1.5">
+        {emojis.map((e, i) => {
+          const v = i + 1;
+          const selected = value === v;
+          return (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onChange(v)}
+              aria-label={`${label} ${v}`}
+              className={
+                "flex h-12 items-center justify-center rounded-xl border text-2xl transition " +
+                (selected
+                  ? "border-primary bg-primary/10 scale-105"
+                  : "border-border bg-background hover:border-primary/50 hover:scale-105")
+              }
+            >
+              {e}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Summary({
+  label,
+  emoji,
+  value,
+}: {
+  label: string;
+  emoji: string;
+  value: number;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-3 text-center">
+      <div className="text-2xl">{emoji}</div>
+      <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="text-sm font-semibold">{value}/5</div>
+    </div>
+  );
+}
