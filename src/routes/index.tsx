@@ -424,6 +424,138 @@ function Feature({ emoji, label }: { emoji: string; label: string }) {
   );
 }
 
+function OnboardingStep({
+  initial,
+  onSubmit,
+  onBack,
+}: {
+  initial: OnboardingData | null;
+  onSubmit: (data: OnboardingData) => void;
+  onBack: () => void;
+}) {
+  const [ageInput, setAgeInput] = useState(initial ? String(initial.age) : "");
+  const [meds, setMeds] = useState<MedStatus | null>(initial?.meds ?? null);
+  const [errors, setErrors] = useState<{ age?: string; meds?: string }>({});
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = OnboardingSchema.safeParse({
+      age: ageInput === "" ? Number.NaN : Number(ageInput),
+      meds: meds ?? undefined,
+    });
+    if (!parsed.success) {
+      const flat = parsed.error.flatten().fieldErrors;
+      setErrors({
+        age: flat.age?.[0],
+        meds: flat.meds?.[0] ?? (meds ? undefined : "Pick one option"),
+      });
+      return;
+    }
+    setErrors({});
+    onSubmit(parsed.data);
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      className="flex flex-1 flex-col justify-center py-10 animate-fade-up"
+    >
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
+        Two quick questions
+      </p>
+      <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        Help us tailor your result
+      </h2>
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        We use your age to set the right DSM-5 symptom threshold (6+ for
+        under 17, 5+ for 17 and older) and your medication status to
+        personalize today's tasks. Nothing leaves your device.
+      </p>
+
+      <div className="mt-8 space-y-7">
+        <div>
+          <label
+            htmlFor="age"
+            className="block text-sm font-medium text-foreground"
+          >
+            How old are you?
+          </label>
+          <input
+            id="age"
+            type="number"
+            inputMode="numeric"
+            min={5}
+            max={120}
+            value={ageInput}
+            onChange={(e) => setAgeInput(e.target.value)}
+            placeholder="e.g. 28"
+            className="mt-2 w-32 rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+            aria-invalid={!!errors.age}
+            aria-describedby={errors.age ? "age-error" : undefined}
+          />
+          {errors.age && (
+            <p id="age-error" className="mt-2 text-xs text-destructive">
+              {errors.age}
+            </p>
+          )}
+        </div>
+
+        <fieldset>
+          <legend className="block text-sm font-medium text-foreground">
+            Are you on ADHD medication?
+          </legend>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {MED_OPTIONS.map((opt) => {
+              const selected = meds === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setMeds(opt.value)}
+                  className={
+                    "rounded-2xl border px-4 py-3 text-left transition " +
+                    (selected
+                      ? "border-primary bg-primary/10 shadow-sm"
+                      : "border-border bg-card hover:border-primary/50")
+                  }
+                  aria-pressed={selected}
+                >
+                  <span className="block text-sm font-medium text-foreground">
+                    {opt.label}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {opt.hint}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {errors.meds && (
+            <p className="mt-2 text-xs text-destructive">{errors.meds}</p>
+          )}
+        </fieldset>
+      </div>
+
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-full px-4 py-2 text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          ← Back
+        </button>
+        <button
+          type="submit"
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20 transition hover:translate-y-[-1px]"
+        >
+          Continue
+          <span>→</span>
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd className="mx-0.5 inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-md border border-border bg-card px-1.5 text-xs font-medium text-foreground shadow-sm">
