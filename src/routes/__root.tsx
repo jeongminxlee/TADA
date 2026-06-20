@@ -12,6 +12,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { TabBar } from "@/components/tab-bar";
 import { isOnboarded } from "@/lib/adhd-shared";
+import { ReminderRunner } from "@/lib/reminders";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -138,6 +139,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <TabBar />
+      <ReminderRunner />
     </QueryClientProvider>
   );
 }
