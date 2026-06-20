@@ -77,6 +77,45 @@ type Answers = Record<string, number | null>;
 
 type Q = { key: string; prefix: "I" | "H"; text: string; domain: string };
 
+// ----- Daily check-in -----
+const CheckInSchema = z.object({
+  date: z.string(), // YYYY-MM-DD
+  mood: z.number().int().min(1).max(5),
+  focus: z.number().int().min(1).max(5),
+  energy: z.number().int().min(1).max(5),
+  note: z.string().trim().max(280).optional(),
+});
+type CheckIn = z.infer<typeof CheckInSchema>;
+
+const MOOD_EMOJI = ["😣", "😕", "😐", "🙂", "😄"];
+const FOCUS_EMOJI = ["🌪️", "😵‍💫", "👌", "🎯", "🔬"];
+const ENERGY_EMOJI = ["🪫", "😴", "😌", "⚡", "🚀"];
+
+const CHECKIN_KEY = "adhd-checkins-v1";
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function loadCheckIns(): CheckIn[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = JSON.parse(localStorage.getItem(CHECKIN_KEY) || "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((r) => CheckInSchema.safeParse(r))
+      .filter((p) => p.success)
+      .map((p) => (p as { success: true; data: CheckIn }).data);
+  } catch {
+    return [];
+  }
+}
+
+function saveCheckIns(list: CheckIn[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(CHECKIN_KEY, JSON.stringify(list));
+}
+
 const QUESTIONS: Q[] = [
   ...INATTENTION.map((text, i) => ({
     key: `I${i}`,
