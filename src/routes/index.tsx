@@ -1188,10 +1188,28 @@ function Results({
           </div>
         </div>
 
+        {adaptive && (
+          <div className="mt-5 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
+              Adapting to today's check-in
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-foreground">
+              {adaptive.reason}
+            </p>
+          </div>
+        )}
+        {!adaptive && (
+          <p className="mt-5 text-xs text-muted-foreground">
+            Log today's mood in the Mood tab and this plan will adapt to how
+            you actually feel right now.
+          </p>
+        )}
+
         <ul className="mt-6 space-y-2.5">
           {planTasks.map((t, i) => {
             const checked = !!done[i];
-            const isMed = medTask && i === planTasks.length - 1;
+            const isAdaptive = !!adaptive && i === 0;
+            const isMed = !!medTask && i === planTasks.length - 1;
             return (
               <li key={i}>
                 <button
@@ -1216,6 +1234,11 @@ function Results({
                     ✓
                   </span>
                   <span className="flex-1">
+                    {isAdaptive && (
+                      <span className="mb-1 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">
+                        Adapted to today
+                      </span>
+                    )}
                     {isMed && (
                       <span className="mb-1 inline-block rounded-full bg-accent/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent-foreground">
                         Medication-tailored
