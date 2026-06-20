@@ -2161,6 +2161,7 @@ export type StoredOnboarding = {
   onboarding: OnboardingData;
   result: ResultPayload;
   completedAt: string;
+  answers?: Answers;
 };
 
 export function loadOnboardingResult(): StoredOnboarding | null {
