@@ -115,8 +115,9 @@ type Q = { key: string; text: string; domain: Domain; partA: boolean };
 const CheckInSchema = z.object({
   date: z.string(), // YYYY-MM-DD
   mood: z.number().int().min(1).max(5),
-  focus: z.number().int().min(1).max(5),
-  energy: z.number().int().min(1).max(5),
+  focus: z.number().int().min(1).max(5).nullable().optional(),
+  energy: z.number().int().min(1).max(5).nullable().optional(),
+  tags: z.array(z.string().min(1).max(24)).max(8).optional(),
   note: z.string().trim().max(280).optional(),
 });
 type CheckIn = z.infer<typeof CheckInSchema>;
@@ -124,6 +125,50 @@ type CheckIn = z.infer<typeof CheckInSchema>;
 const MOOD_LABELS = ["Rough", "Low", "Okay", "Good", "Great"];
 const FOCUS_LABELS = ["Scattered", "Foggy", "Okay", "Locked in", "Laser"];
 const ENERGY_LABELS = ["Empty", "Tired", "Steady", "Charged", "Buzzing"];
+
+// Common ADHD-relevant mood / state tags. Curated so they're quick to scan
+// but cover the states people commonly want to note alongside a mood rating.
+const MOOD_TAGS = [
+  "anxious",
+  "restless",
+  "overwhelmed",
+  "hyperfocused",
+  "scattered",
+  "irritable",
+  "motivated",
+  "calm",
+  "tired",
+  "low",
+  "wired",
+  "bored",
+];
+
+const CHECKIN_EVENT = "adhd-checkins-changed";
+
+function emitCheckInChange() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(CHECKIN_EVENT));
+}
+
+function useCheckIns(): [CheckIn[], (next: CheckIn[]) => void] {
+  const [history, setHistory] = useState<CheckIn[]>(() => loadCheckIns());
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const refresh = () => setHistory(loadCheckIns());
+    window.addEventListener(CHECKIN_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(CHECKIN_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+  const update = (next: CheckIn[]) => {
+    setHistory(next);
+    saveCheckIns(next);
+    emitCheckInChange();
+  };
+  return [history, update];
+}
 
 const CHECKIN_KEY = "adhd-checkins-v1";
 
@@ -929,6 +974,8 @@ function Results({
         </div>
       </div>
 
+      <MoodReminderBanner />
+      <MoodCard />
       <CheckInCard />
 
       <NudgeCard subtype={result.subtype} />
@@ -1082,37 +1129,193 @@ function ScoreCard({
   );
 }
 
-function CheckInCard() {
-  const [history, setHistory] = useState<CheckIn[]>(() => loadCheckIns());
+function entryAvg(c: CheckIn): number {
+  const vals = [c.mood, c.focus ?? undefined, c.energy ?? undefined].filter(
+    (v): v is number => typeof v === "number",
+  );
+  return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+}
+
+function MoodReminderBanner() {
+  const [history] = useCheckIns();
+  const todays = history.find((c) => c.date === todayISO());
+  if (todays) return null;
+  return (
+    <div className="rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">
+      <span aria-hidden className="mr-2 inline-block h-2 w-2 rounded-full bg-primary align-middle" />
+      You haven't logged your mood today. It takes about ten seconds.
+    </div>
+  );
+}
+
+function MoodCard() {
+  const [history, setHistory] = useCheckIns();
   const today = todayISO();
   const todays = history.find((c) => c.date === today) ?? null;
 
   const [mood, setMood] = useState<number | null>(todays?.mood ?? null);
-  const [focus, setFocus] = useState<number | null>(todays?.focus ?? null);
-  const [energy, setEnergy] = useState<number | null>(todays?.energy ?? null);
-  const [note, setNote] = useState<string>(todays?.note ?? "");
-  const [saved, setSaved] = useState(!!todays);
-  const [err, setErr] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>(todays?.tags ?? []);
 
-  function save() {
-    const parsed = CheckInSchema.safeParse({
+  // Re-sync local state if storage updates from elsewhere (e.g. CheckInCard)
+  useEffect(() => {
+    setMood(todays?.mood ?? null);
+    setTags(todays?.tags ?? []);
+  }, [todays?.mood, todays?.tags?.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function commit(nextMood: number, nextTags: string[]) {
+    const merged: CheckIn = {
       date: today,
-      mood,
-      focus,
-      energy,
-      note: note.trim() || undefined,
-    });
-    if (!parsed.success) {
-      setErr("Pick a rating for mood, focus, and energy.");
-      return;
-    }
-    setErr(null);
+      mood: nextMood,
+      focus: todays?.focus ?? null,
+      energy: todays?.energy ?? null,
+      tags: nextTags.length ? nextTags : undefined,
+      note: todays?.note,
+    };
+    const parsed = CheckInSchema.safeParse(merged);
+    if (!parsed.success) return;
     const next = [
       ...history.filter((c) => c.date !== today),
       parsed.data,
     ].sort((a, b) => a.date.localeCompare(b.date));
     setHistory(next);
-    saveCheckIns(next);
+  }
+
+  function pickMood(v: number) {
+    setMood(v);
+    commit(v, tags);
+  }
+
+  function toggleTag(t: string) {
+    const has = tags.includes(t);
+    const next = has ? tags.filter((x) => x !== t) : [...tags, t].slice(0, 8);
+    setTags(next);
+    if (mood) commit(mood, next);
+  }
+
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+            Mood today
+          </p>
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+            One tap. That's it.
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Log how you feel right now. Add a focus and energy rating below if
+            you've got a minute.
+          </p>
+        </div>
+        {mood && (
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            Logged · {MOOD_LABELS[mood - 1]}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-5 grid grid-cols-5 gap-1.5">
+        {MOOD_LABELS.map((word, i) => {
+          const v = i + 1;
+          const selected = mood === v;
+          return (
+            <button
+              key={v}
+              type="button"
+              onClick={() => pickMood(v)}
+              aria-label={`Mood: ${word}`}
+              className={
+                "flex h-16 flex-col items-center justify-center gap-0.5 rounded-2xl border px-1 transition " +
+                (selected
+                  ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+                  : "border-border bg-background hover:border-primary/50")
+              }
+            >
+              <span className="text-base font-semibold text-foreground">{v}</span>
+              <span className="text-[10px] leading-tight text-muted-foreground">{word}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-5">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          What fits? (optional)
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {MOOD_TAGS.map((t) => {
+            const on = tags.includes(t);
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => toggleTag(t)}
+                className={
+                  "rounded-full border px-3 py-1 text-xs transition " +
+                  (on
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border bg-background text-muted-foreground hover:border-primary/50")
+                }
+              >
+                {t}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CheckInCard() {
+  const [history, setHistory] = useCheckIns();
+  const today = todayISO();
+  const todays = history.find((c) => c.date === today) ?? null;
+
+  const [focus, setFocus] = useState<number | null>(todays?.focus ?? null);
+  const [energy, setEnergy] = useState<number | null>(todays?.energy ?? null);
+  const [note, setNote] = useState<string>(todays?.note ?? "");
+  const [saved, setSaved] = useState<boolean>(
+    !!(todays?.focus && todays?.energy),
+  );
+  const [err, setErr] = useState<string | null>(null);
+  const [range, setRange] = useState<7 | 30 | 90>(7);
+
+  useEffect(() => {
+    setFocus(todays?.focus ?? null);
+    setEnergy(todays?.energy ?? null);
+    setNote(todays?.note ?? "");
+    setSaved(!!(todays?.focus && todays?.energy));
+  }, [todays?.focus, todays?.energy, todays?.note]);
+
+  function save() {
+    if (!todays?.mood) {
+      setErr("Tap a mood above first.");
+      return;
+    }
+    if (!focus || !energy) {
+      setErr("Pick a rating for focus and energy.");
+      return;
+    }
+    setErr(null);
+    const merged: CheckIn = {
+      date: today,
+      mood: todays.mood,
+      focus,
+      energy,
+      tags: todays.tags,
+      note: note.trim() || undefined,
+    };
+    const parsed = CheckInSchema.safeParse(merged);
+    if (!parsed.success) {
+      setErr("Something looked off — please try again.");
+      return;
+    }
+    const next = [
+      ...history.filter((c) => c.date !== today),
+      parsed.data,
+    ].sort((a, b) => a.date.localeCompare(b.date));
+    setHistory(next);
     setSaved(true);
   }
 
@@ -1120,31 +1323,35 @@ function CheckInCard() {
     setSaved(false);
   }
 
-  // Last 7 days for the trend strip
-  const last7: (CheckIn | null)[] = useMemo(() => {
+  const days: (CheckIn | null)[] = useMemo(() => {
     const out: (CheckIn | null)[] = [];
-    for (let i = 6; i >= 0; i--) {
+    for (let i = range - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const iso = d.toISOString().slice(0, 10);
       out.push(history.find((c) => c.date === iso) ?? null);
     }
     return out;
-  }, [history]);
+  }, [history, range]);
+
+  const logged = days.filter(Boolean) as CheckIn[];
+  const avgMood = logged.length
+    ? logged.reduce((s, c) => s + c.mood, 0) / logged.length
+    : 0;
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
-            Daily check-in
+            Focus &amp; energy
           </p>
           <h3 className="mt-2 text-2xl font-semibold tracking-tight">
-            How is today going?
+            Round out today's check-in
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            One snapshot a day. Tracking mood and symptoms over time helps you
-            and any clinician spot patterns (NICE NG87).
+            Tracking these alongside mood helps you and any clinician spot
+            patterns over time (NICE NG87).
           </p>
         </div>
         {saved && (
@@ -1156,12 +1363,6 @@ function CheckInCard() {
 
       {!saved ? (
         <div className="mt-6 space-y-5">
-          <Scale
-            label="Mood"
-            labels={MOOD_LABELS}
-            value={mood}
-            onChange={setMood}
-          />
           <Scale
             label="Focus"
             labels={FOCUS_LABELS}
@@ -1176,10 +1377,7 @@ function CheckInCard() {
           />
 
           <div>
-            <label
-              htmlFor="note"
-              className="block text-sm font-medium text-foreground"
-            >
+            <label htmlFor="note" className="block text-sm font-medium text-foreground">
               Note (optional)
             </label>
             <textarea
@@ -1210,12 +1408,27 @@ function CheckInCard() {
         </div>
       ) : (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Summary label="Mood" word={MOOD_LABELS[(todays?.mood ?? mood ?? 1) - 1]} value={todays?.mood ?? mood!} />
-          <Summary label="Focus" word={FOCUS_LABELS[(todays?.focus ?? focus ?? 1) - 1]} value={todays?.focus ?? focus!} />
-          <Summary label="Energy" word={ENERGY_LABELS[(todays?.energy ?? energy ?? 1) - 1]} value={todays?.energy ?? energy!} />
-          {(todays?.note || note) && (
+          {todays?.mood && (
+            <Summary label="Mood" word={MOOD_LABELS[todays.mood - 1]} value={todays.mood} />
+          )}
+          {todays?.focus && (
+            <Summary label="Focus" word={FOCUS_LABELS[todays.focus - 1]} value={todays.focus} />
+          )}
+          {todays?.energy && (
+            <Summary label="Energy" word={ENERGY_LABELS[todays.energy - 1]} value={todays.energy} />
+          )}
+          {todays?.tags && todays.tags.length > 0 && (
+            <div className="sm:col-span-3 flex flex-wrap gap-1.5">
+              {todays.tags.map((t) => (
+                <span key={t} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs text-secondary-foreground">
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
+          {todays?.note && (
             <p className="sm:col-span-3 rounded-xl bg-background p-3 text-sm italic text-muted-foreground">
-              “{todays?.note ?? note}”
+              "{todays.note}"
             </p>
           )}
           <div className="sm:col-span-3 flex justify-end">
@@ -1231,27 +1444,61 @@ function CheckInCard() {
       )}
 
       <div className="mt-8">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Last 7 days
-        </p>
-        <div className="grid grid-cols-7 gap-1.5">
-          {last7.map((c, i) => {
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Mood trend · {logged.length}/{range} days
+            {logged.length > 0 && (
+              <span className="ml-2 normal-case tracking-normal text-foreground">
+                avg {avgMood.toFixed(1)}
+              </span>
+            )}
+          </p>
+          <div className="flex gap-1">
+            {[7, 30, 90].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRange(r as 7 | 30 | 90)}
+                className={
+                  "rounded-full px-2.5 py-1 text-[11px] font-medium transition " +
+                  (range === r
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/70")
+                }
+              >
+                {r}d
+              </button>
+            ))}
+          </div>
+        </div>
+        <div
+          className="grid gap-[3px]"
+          style={{ gridTemplateColumns: `repeat(${range}, minmax(0, 1fr))` }}
+        >
+          {days.map((c, i) => {
             const d = new Date();
-            d.setDate(d.getDate() - (6 - i));
-            const day = d.toLocaleDateString(undefined, { weekday: "narrow" });
-            const avg = c ? (c.mood + c.focus + c.energy) / 3 : 0;
+            d.setDate(d.getDate() - (range - 1 - i));
+            const iso = d.toISOString().slice(0, 10);
+            const moodVal = c?.mood ?? 0;
+            const avg = c ? entryAvg(c) : 0;
+            const title = c
+              ? `${iso} · Mood ${c.mood}${c.focus ? ` · Focus ${c.focus}` : ""}${c.energy ? ` · Energy ${c.energy}` : ""}${c.tags?.length ? ` · ${c.tags.join(", ")}` : ""}`
+              : `${iso} · no entry`;
             return (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <div className="flex h-16 w-full items-end overflow-hidden rounded-lg bg-muted/60">
-                  {c ? (
-                    <div
-                      className="w-full rounded-lg bg-primary/70 transition-all"
-                      style={{ height: `${(avg / 5) * 100}%` }}
-                      title={`Mood ${c.mood} · Focus ${c.focus} · Energy ${c.energy}`}
-                    />
-                  ) : null}
-                </div>
-                <span className="text-[10px] text-muted-foreground">{day}</span>
+              <div
+                key={i}
+                className="flex h-14 w-full items-end overflow-hidden rounded-md bg-muted/50"
+                title={title}
+              >
+                {c ? (
+                  <div
+                    className="w-full rounded-md bg-primary/70 transition-all"
+                    style={{
+                      height: `${(Math.max(moodVal, avg) / 5) * 100}%`,
+                      opacity: 0.5 + (moodVal / 5) * 0.5,
+                    }}
+                  />
+                ) : null}
               </div>
             );
           })}
