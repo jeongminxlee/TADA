@@ -1008,7 +1008,8 @@ function Results({
   const medLabel = onboarding
     ? MED_OPTIONS.find((m) => m.value === onboarding.meds)?.label
     : null;
-  const storageKey = `adhd-tasks-${result.key}-${onboarding?.meds ?? "x"}-${new Date()
+  const adaptiveFp = adaptive ? adaptive.task.title.slice(0, 24) : "none";
+  const storageKey = `adhd-tasks-${result.key}-${onboarding?.meds ?? "x"}-${adaptiveFp}-${new Date()
     .toISOString()
     .slice(0, 10)}`;
   const [done, setDone] = useState<Record<number, boolean>>(() => {
