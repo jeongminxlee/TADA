@@ -5,10 +5,10 @@ import { z } from "zod";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "ADHD Self-Screener — DSM-5 Subtypes" },
-      { name: "description", content: "Adult ADHD self-screener based on the WHO ASRS v1.1 with DSM-5 subtype scoring. Informational, not a diagnosis." },
-      { property: "og:title", content: "ADHD Self-Screener — DSM-5 Subtypes" },
-      { property: "og:description", content: "Take the WHO ASRS v1.1 adult ADHD screener with subtype scoring and daily check-ins." },
+      { title: "Adult ADHD Self-Screener (UK) — WHO ASRS v1.1" },
+      { name: "description", content: "Free adult ADHD self-screener for the UK, based on the WHO ASRS v1.1 and NICE guideline NG87. Includes signposting to your GP and NHS services. Not a diagnosis." },
+      { property: "og:title", content: "Adult ADHD Self-Screener (UK) — WHO ASRS v1.1" },
+      { property: "og:description", content: "WHO ASRS v1.1 adult ADHD screener with NICE NG87-aligned guidance and NHS signposting." },
     ],
   }),
   component: Index,
@@ -469,7 +469,7 @@ function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
-        WHO ASRS v1.1 · adult ADHD screener
+        WHO ASRS v1.1 · adult ADHD screener · UK
       </p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-6xl">
         How does your brain run?
@@ -477,7 +477,8 @@ function Intro({ onStart }: { onStart: () => void }) {
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
         18 short questions, one at a time. No long forms, no scrolling walls
         of text. Tap an answer or press <Kbd>1</Kbd>–<Kbd>5</Kbd> — you can
-        change anything later. For reflection, not diagnosis.
+        change anything later. Aligned with NICE guideline NG87. For
+        reflection — only a GP or NHS specialist can diagnose ADHD.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
@@ -554,7 +555,7 @@ function OnboardingStep({
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
         We use your age to set the right DSM-5 symptom threshold (6+ for
         under 17, 5+ for 17 and older) and your medication status to
-        personalize today's tasks. Nothing leaves your device.
+        personalise today's tasks. Nothing leaves your device.
       </p>
 
       <div className="mt-8 space-y-7">
@@ -881,8 +882,8 @@ function Results({
         </div>
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
           The WHO-validated Part A screener (Kessler et al., 2005) flags scores
-          of 4 or more "shaded" responses as warranting further clinical
-          evaluation. This is not a diagnosis.
+          of 4 or more "shaded" responses as warranting further assessment by
+          a GP. This is not a diagnosis.
         </p>
       </div>
 
@@ -998,9 +999,15 @@ function Results({
         </ul>
 
         <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
-          Drawn from CBT for adult ADHD (Safren et al., 2005/2010), Barkley's executive-function framework (2012), NICE guideline NG87, and CHADD clinical summaries. These are self-management strategies, not a treatment plan — a clinician can personalize them.
+          Drawn from CBT for adult ADHD (Safren et al., 2005/2010), Barkley's
+          executive-function framework (2012), NICE guideline NG87, and ADHD
+          UK / ADHD Foundation resources. These are self-management strategies,
+          not a treatment plan — your GP or an NHS ADHD service can
+          personalise them.
         </p>
       </div>
+
+      <NhsNextSteps partAPositive={result.partAPositive} />
 
       <div className="rounded-2xl bg-accent/40 p-6 text-sm leading-relaxed text-accent-foreground">
         <strong className="font-semibold">How this is scored.</strong> Items
@@ -1010,9 +1017,11 @@ function Results({
         symptoms highly consistent with adult ADHD. All 18 items also map to
         DSM-5 inattentive and hyperactive-impulsive symptom counts; your
         threshold of <strong>{result.threshold}+</strong> reflects the DSM-5
-        age rule (6+ under 17, 5+ for 17 and older). Diagnosis also requires
-        onset before age 12, symptoms in 2+ settings, and clinically
-        significant impairment — only a qualified clinician can establish
+        age rule (6+ under 17, 5+ for 17 and older). NICE guideline NG87 is
+        the UK standard for ADHD assessment and care. A diagnosis also
+        requires onset before age 12, symptoms in 2+ settings, and
+        clinically significant impairment — only a GP or NHS specialist
+        (typically a psychiatrist or specialist ADHD service) can establish
         that.
       </div>
 
@@ -1026,9 +1035,10 @@ function Results({
         </button>
       </div>
       <p className="pt-6 text-xs leading-relaxed text-muted-foreground">
-        This tool is for educational purposes only and does not replace a clinical
-        evaluation. DSM-5 also requires symptom onset before age 12, presence in 2+
-        settings, and clinically significant impairment.
+        For educational use only and not a substitute for NHS clinical
+        assessment. If you're in distress, call NHS 111 (or 999 in an
+        emergency). For mental health support, contact the Samaritans on
+        116 123.
       </p>
     </div>
   );
@@ -1310,5 +1320,84 @@ function Summary({
       </div>
       <div className="text-xs text-muted-foreground">{value}/5</div>
     </div>
+  );
+}
+
+function NhsNextSteps({ partAPositive }: { partAPositive: boolean }) {
+  return (
+    <div className="rounded-3xl border border-primary/30 bg-primary/5 p-8 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+        NHS next steps · UK
+      </p>
+      <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+        {partAPositive
+          ? "Worth talking to your GP"
+          : "If symptoms still affect your day"}
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        This screener can't diagnose ADHD, but you can take your results to
+        your GP. They can refer you to an NHS adult ADHD assessment service.
+        Waiting lists can be long — under <strong className="text-foreground">NHS
+        Right to Choose</strong> (England), you can usually ask to be referred
+        to a provider with a shorter wait.
+      </p>
+      <ul className="mt-5 grid gap-2 text-sm sm:grid-cols-2">
+        <NhsLink
+          href="https://www.nhs.uk/conditions/attention-deficit-hyperactivity-disorder-adhd/"
+          title="ADHD on NHS.uk"
+          hint="Overview, symptoms, treatment"
+        />
+        <NhsLink
+          href="https://www.nhs.uk/service-search/find-a-gp"
+          title="Find a GP"
+          hint="Register or book an appointment"
+        />
+        <NhsLink
+          href="https://www.nice.org.uk/guidance/ng87"
+          title="NICE guideline NG87"
+          hint="UK standard for ADHD care"
+        />
+        <NhsLink
+          href="https://adhduk.co.uk/right-to-choose/"
+          title="Right to Choose (ADHD UK)"
+          hint="Shorter NHS waiting lists in England"
+        />
+      </ul>
+      <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
+        In a crisis call <strong className="text-foreground">NHS 111</strong>{" "}
+        (option 2 for mental health) or <strong className="text-foreground">999</strong>{" "}
+        if life is at risk. Samaritans: <strong className="text-foreground">116 123</strong>, free, 24/7.
+      </p>
+    </div>
+  );
+}
+
+function NhsLink({
+  href,
+  title,
+  hint,
+}: {
+  href: string;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <li>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex items-start gap-3 rounded-2xl border border-border bg-background p-3 transition hover:border-primary/50"
+      >
+        <span aria-hidden className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+        <span className="flex-1">
+          <span className="block text-sm font-medium text-foreground">
+            {title}
+            <span className="ml-1 text-muted-foreground transition group-hover:text-primary">↗</span>
+          </span>
+          <span className="block text-xs text-muted-foreground">{hint}</span>
+        </span>
+      </a>
+    </li>
   );
 }
