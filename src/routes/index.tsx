@@ -235,9 +235,12 @@ function Index() {
   const total = QUESTIONS.length;
   const [answers, setAnswers] = useState<Answers>({});
   const [step, setStep] = useState(0); // 0..total-1 = questions, total = results, -1 = intro
-  const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<"intro" | "onboarding" | "quiz">("intro");
+  const [onboarding, setOnboarding] = useState<Onboarding | null>(null);
   const [pulse, setPulse] = useState(0);
 
+  const started = phase === "quiz";
+  const threshold = onboarding ? ageThreshold(onboarding.age) : 5;
   const answered = Object.values(answers).filter((v) => v !== null && v !== undefined).length;
   const submitted = started && step >= total;
   const currentQ = !submitted && started ? QUESTIONS[step] : null;
@@ -251,8 +254,8 @@ function Index() {
       (_, i) => (answers[`H${i}`] ?? -1) >= COUNT_THRESHOLD,
     ).length;
 
-    const inattMet = inattCount >= ADULT_SYMPTOM_THRESHOLD;
-    const hyperMet = hyperCount >= ADULT_SYMPTOM_THRESHOLD;
+    const inattMet = inattCount >= threshold;
+    const hyperMet = hyperCount >= threshold;
 
     let subtype = "Below DSM-5 symptom threshold";
     let key: "inattentive" | "hyperactive" | "combined" | "below" = "below";
@@ -275,8 +278,8 @@ function Index() {
         "You endorsed enough hyperactive-impulsive symptoms to meet the DSM-5 threshold, without reaching it for the inattentive domain.";
     }
 
-    return { inattCount, hyperCount, inattMet, hyperMet, subtype, description, key };
-  }, [answers]);
+    return { inattCount, hyperCount, inattMet, hyperMet, subtype, description, key, threshold };
+  }, [answers, threshold]);
 
   function pick(value: number) {
     if (!currentQ) return;
@@ -299,7 +302,7 @@ function Index() {
   function reset() {
     setAnswers({});
     setStep(0);
-    setStarted(true);
+    setPhase("quiz");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -324,10 +327,19 @@ function Index() {
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <BackgroundBlobs />
       <div className="relative mx-auto flex min-h-screen max-w-2xl flex-col px-6 py-8 sm:py-12">
-        {!started ? (
-          <Intro onStart={() => setStarted(true)} />
+        {phase === "intro" ? (
+          <Intro onStart={() => setPhase("onboarding")} />
+        ) : phase === "onboarding" ? (
+          <Onboarding
+            initial={onboarding}
+            onSubmit={(data) => {
+              setOnboarding(data);
+              setPhase("quiz");
+            }}
+            onBack={() => setPhase("intro")}
+          />
         ) : submitted ? (
-          <Results result={result} onReset={reset} />
+          <Results result={result} onReset={reset} onboarding={onboarding} />
         ) : (
           <>
             <TopBar
