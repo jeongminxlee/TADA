@@ -999,6 +999,16 @@ function Results({
                 {medLabel}
               </span>
             )}
+            {onboarding.otherMeds === "yes" && (
+              <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                Taking other medication
+              </span>
+            )}
+            {onboarding.otherMeds === "preferNot" && (
+              <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                Medication: prefer not to say
+              </span>
+            )}
           </div>
         )}
 
