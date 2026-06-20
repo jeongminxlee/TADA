@@ -1246,12 +1246,12 @@ function CheckInCard() {
 
 function Scale({
   label,
-  emojis,
+  labels,
   value,
   onChange,
 }: {
   label: string;
-  emojis: string[];
+  labels: string[];
   value: number | null;
   onChange: (v: number) => void;
 }) {
@@ -1260,11 +1260,11 @@ function Scale({
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-foreground">{label}</span>
         <span className="text-xs text-muted-foreground">
-          {value ? `${value}/5` : "—"}
+          {value ? labels[value - 1] : "Pick one"}
         </span>
       </div>
       <div className="mt-2 grid grid-cols-5 gap-1.5">
-        {emojis.map((e, i) => {
+        {labels.map((word, i) => {
           const v = i + 1;
           const selected = value === v;
           return (
@@ -1272,15 +1272,16 @@ function Scale({
               key={v}
               type="button"
               onClick={() => onChange(v)}
-              aria-label={`${label} ${v}`}
+              aria-label={`${label}: ${word}`}
               className={
-                "flex h-12 items-center justify-center rounded-xl border text-2xl transition " +
+                "flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl border px-1 transition " +
                 (selected
-                  ? "border-primary bg-primary/10 scale-105"
-                  : "border-border bg-background hover:border-primary/50 hover:scale-105")
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-background hover:border-primary/50")
               }
             >
-              {e}
+              <span className="text-sm font-semibold text-foreground">{v}</span>
+              <span className="text-[10px] leading-tight text-muted-foreground">{word}</span>
             </button>
           );
         })}
@@ -1291,20 +1292,20 @@ function Scale({
 
 function Summary({
   label,
-  emoji,
+  word,
   value,
 }: {
   label: string;
-  emoji: string;
+  word: string;
   value: number;
 }) {
   return (
     <div className="rounded-xl border border-border bg-background p-3 text-center">
-      <div className="text-2xl">{emoji}</div>
-      <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+      <div className="text-base font-semibold text-foreground">{word}</div>
+      <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
-      <div className="text-sm font-semibold">{value}/5</div>
+      <div className="text-xs text-muted-foreground">{value}/5</div>
     </div>
   );
 }
