@@ -555,7 +555,7 @@ function OnboardingStep({
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
         We use your age to set the right DSM-5 symptom threshold (6+ for
         under 17, 5+ for 17 and older) and your medication status to
-        personalize today's tasks. Nothing leaves your device.
+        personalise today's tasks. Nothing leaves your device.
       </p>
 
       <div className="mt-8 space-y-7">
