@@ -595,15 +595,16 @@ function OnboardingStep({
       className="flex flex-1 flex-col justify-center py-10 animate-fade-up"
     >
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
-        Two quick questions
+        Three quick questions
       </p>
       <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
         Help us tailor your result
       </h2>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
         We use your age to set the right DSM-5 symptom threshold (6+ for
-        under 17, 5+ for 17 and older) and your medication status to
-        personalise today's tasks. Nothing leaves your device.
+        under 17, 5+ for 17 and older), your ADHD medication status, and
+        any other medicines you take to personalise today's tasks.
+        Nothing leaves your device.
       </p>
 
       <div className="mt-8 space-y-7">
