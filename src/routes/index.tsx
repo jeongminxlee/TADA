@@ -814,6 +814,8 @@ function Results({
     description: string;
     key: "inattentive" | "hyperactive" | "combined" | "below";
     threshold: number;
+    partAShaded: number;
+    partAPositive: boolean;
   };
   onReset: () => void;
   onboarding: OnboardingData | null;
@@ -844,6 +846,39 @@ function Results({
 
   return (
     <div className="space-y-8 py-8 animate-fade-up">
+      <div
+        className={
+          "rounded-3xl border p-6 shadow-sm transition " +
+          (result.partAPositive
+            ? "border-primary/40 bg-primary/5"
+            : "border-border bg-card")
+        }
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+              ASRS v1.1 · Part A screener
+            </p>
+            <h3 className="mt-1 text-lg font-semibold">
+              {result.partAPositive
+                ? "Symptoms highly consistent with adult ADHD"
+                : "Below the Part A screening threshold"}
+            </h3>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-semibold tracking-tight">
+              {result.partAShaded}
+            </span>
+            <span className="text-sm text-muted-foreground">/ 6 shaded</span>
+          </div>
+        </div>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          The WHO-validated Part A screener (Kessler et al., 2005) flags scores
+          of 4 or more "shaded" responses as warranting further clinical
+          evaluation. This is not a diagnosis.
+        </p>
+      </div>
+
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
           🎉 Your result
