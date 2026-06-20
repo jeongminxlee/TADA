@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,9 +47,31 @@ const SCALE = [
 ];
 
 // Per DSM-5, a symptom "counts" toward the subtype threshold if it occurs
-// often or very often (>= 3 on this 0–4 scale).
+// often or very often (>= 3 on this 0–4 scale). The number-of-symptoms
+// threshold is age-dependent: children/adolescents <17 need 6+, adults
+// (17+) need 5+ in a domain (DSM-5, APA 2013).
 const COUNT_THRESHOLD = 3;
-const ADULT_SYMPTOM_THRESHOLD = 5; // 5+ for adolescents 17+/adults; 6+ for children
+
+type MedStatus = "none" | "considering" | "current" | "former";
+
+const MED_OPTIONS: { value: MedStatus; label: string; hint: string }[] = [
+  { value: "none", label: "Not on medication", hint: "Never been prescribed" },
+  { value: "considering", label: "Considering / pending eval", hint: "Looking into it" },
+  { value: "current", label: "Currently taking", hint: "Stimulant or non-stimulant" },
+  { value: "former", label: "Took it previously", hint: "Not currently on it" },
+];
+
+// Zod schema validates the onboarding payload on the client before we use
+// it to set thresholds and tailor tasks.
+const OnboardingSchema = z.object({
+  age: z
+    .number({ invalid_type_error: "Enter your age as a number" })
+    .int("Enter a whole number")
+    .min(5, "Must be 5 or older")
+    .max(120, "Enter a realistic age"),
+  meds: z.enum(["none", "considering", "current", "former"]),
+});
+type OnboardingData = z.infer<typeof OnboardingSchema>;
 
 type Answers = Record<string, number | null>;
 
@@ -184,13 +207,40 @@ const TASKS: Record<
   },
 };
 
+// Medication-specific reminders layered on top of the subtype plan.
+// Grounded in MTA follow-up data (Jensen et al., 2007), NICE NG87, and
+// CHADD guidance on combining pharmacological + behavioral treatment.
+const MED_TASK: Record<MedStatus, Task | null> = {
+  none: null,
+  considering: {
+    title: "Note one symptom example to share with a clinician",
+    why: "Concrete, recent examples make assessment faster and more accurate (NICE NG87 assessment guidance).",
+  },
+  current: {
+    title: "Take medication on schedule and log how today felt (1–5)",
+    why: "Daily ratings help you and your prescriber spot dose timing or side-effect patterns. Behavioral skills + medication outperform either alone (MTA follow-up; NICE NG87).",
+  },
+  former: {
+    title: "Note today's hardest symptom moment for your next review",
+    why: "Tracking symptom impact off-medication informs whether to revisit pharmacological options with a clinician.",
+  },
+};
+
+function ageThreshold(age: number) {
+  // DSM-5: 6+ symptoms for under 17, 5+ for 17 and older
+  return age < 17 ? 6 : 5;
+}
+
 function Index() {
   const total = QUESTIONS.length;
   const [answers, setAnswers] = useState<Answers>({});
   const [step, setStep] = useState(0); // 0..total-1 = questions, total = results, -1 = intro
-  const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<"intro" | "onboarding" | "quiz">("intro");
+  const [onboarding, setOnboarding] = useState<OnboardingData | null>(null);
   const [pulse, setPulse] = useState(0);
 
+  const started = phase === "quiz";
+  const threshold = onboarding ? ageThreshold(onboarding.age) : 5;
   const answered = Object.values(answers).filter((v) => v !== null && v !== undefined).length;
   const submitted = started && step >= total;
   const currentQ = !submitted && started ? QUESTIONS[step] : null;
@@ -204,8 +254,8 @@ function Index() {
       (_, i) => (answers[`H${i}`] ?? -1) >= COUNT_THRESHOLD,
     ).length;
 
-    const inattMet = inattCount >= ADULT_SYMPTOM_THRESHOLD;
-    const hyperMet = hyperCount >= ADULT_SYMPTOM_THRESHOLD;
+    const inattMet = inattCount >= threshold;
+    const hyperMet = hyperCount >= threshold;
 
     let subtype = "Below DSM-5 symptom threshold";
     let key: "inattentive" | "hyperactive" | "combined" | "below" = "below";
@@ -228,8 +278,8 @@ function Index() {
         "You endorsed enough hyperactive-impulsive symptoms to meet the DSM-5 threshold, without reaching it for the inattentive domain.";
     }
 
-    return { inattCount, hyperCount, inattMet, hyperMet, subtype, description, key };
-  }, [answers]);
+    return { inattCount, hyperCount, inattMet, hyperMet, subtype, description, key, threshold };
+  }, [answers, threshold]);
 
   function pick(value: number) {
     if (!currentQ) return;
@@ -252,7 +302,7 @@ function Index() {
   function reset() {
     setAnswers({});
     setStep(0);
-    setStarted(true);
+    setPhase("quiz");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -277,10 +327,19 @@ function Index() {
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <BackgroundBlobs />
       <div className="relative mx-auto flex min-h-screen max-w-2xl flex-col px-6 py-8 sm:py-12">
-        {!started ? (
-          <Intro onStart={() => setStarted(true)} />
+        {phase === "intro" ? (
+          <Intro onStart={() => setPhase("onboarding")} />
+        ) : phase === "onboarding" ? (
+          <OnboardingStep
+            initial={onboarding}
+            onSubmit={(data: OnboardingData) => {
+              setOnboarding(data);
+              setPhase("quiz");
+            }}
+            onBack={() => setPhase("intro")}
+          />
         ) : submitted ? (
-          <Results result={result} onReset={reset} />
+          <Results result={result} onReset={reset} onboarding={onboarding} />
         ) : (
           <>
             <TopBar
@@ -362,6 +421,138 @@ function Feature({ emoji, label }: { emoji: string; label: string }) {
       <span className="text-base">{emoji}</span>
       <span>{label}</span>
     </li>
+  );
+}
+
+function OnboardingStep({
+  initial,
+  onSubmit,
+  onBack,
+}: {
+  initial: OnboardingData | null;
+  onSubmit: (data: OnboardingData) => void;
+  onBack: () => void;
+}) {
+  const [ageInput, setAgeInput] = useState(initial ? String(initial.age) : "");
+  const [meds, setMeds] = useState<MedStatus | null>(initial?.meds ?? null);
+  const [errors, setErrors] = useState<{ age?: string; meds?: string }>({});
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = OnboardingSchema.safeParse({
+      age: ageInput === "" ? Number.NaN : Number(ageInput),
+      meds: meds ?? undefined,
+    });
+    if (!parsed.success) {
+      const flat = parsed.error.flatten().fieldErrors;
+      setErrors({
+        age: flat.age?.[0],
+        meds: flat.meds?.[0] ?? (meds ? undefined : "Pick one option"),
+      });
+      return;
+    }
+    setErrors({});
+    onSubmit(parsed.data);
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      className="flex flex-1 flex-col justify-center py-10 animate-fade-up"
+    >
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
+        Two quick questions
+      </p>
+      <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        Help us tailor your result
+      </h2>
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        We use your age to set the right DSM-5 symptom threshold (6+ for
+        under 17, 5+ for 17 and older) and your medication status to
+        personalize today's tasks. Nothing leaves your device.
+      </p>
+
+      <div className="mt-8 space-y-7">
+        <div>
+          <label
+            htmlFor="age"
+            className="block text-sm font-medium text-foreground"
+          >
+            How old are you?
+          </label>
+          <input
+            id="age"
+            type="number"
+            inputMode="numeric"
+            min={5}
+            max={120}
+            value={ageInput}
+            onChange={(e) => setAgeInput(e.target.value)}
+            placeholder="e.g. 28"
+            className="mt-2 w-32 rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+            aria-invalid={!!errors.age}
+            aria-describedby={errors.age ? "age-error" : undefined}
+          />
+          {errors.age && (
+            <p id="age-error" className="mt-2 text-xs text-destructive">
+              {errors.age}
+            </p>
+          )}
+        </div>
+
+        <fieldset>
+          <legend className="block text-sm font-medium text-foreground">
+            Are you on ADHD medication?
+          </legend>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {MED_OPTIONS.map((opt) => {
+              const selected = meds === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setMeds(opt.value)}
+                  className={
+                    "rounded-2xl border px-4 py-3 text-left transition " +
+                    (selected
+                      ? "border-primary bg-primary/10 shadow-sm"
+                      : "border-border bg-card hover:border-primary/50")
+                  }
+                  aria-pressed={selected}
+                >
+                  <span className="block text-sm font-medium text-foreground">
+                    {opt.label}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {opt.hint}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {errors.meds && (
+            <p className="mt-2 text-xs text-destructive">{errors.meds}</p>
+          )}
+        </fieldset>
+      </div>
+
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-full px-4 py-2 text-sm text-muted-foreground transition hover:text-foreground"
+        >
+          ← Back
+        </button>
+        <button
+          type="submit"
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground shadow-md shadow-primary/20 transition hover:translate-y-[-1px]"
+        >
+          Continue
+          <span>→</span>
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -527,6 +718,7 @@ function NavBar({
 function Results({
   result,
   onReset,
+  onboarding,
 }: {
   result: {
     inattCount: number;
@@ -536,11 +728,20 @@ function Results({
     subtype: string;
     description: string;
     key: "inattentive" | "hyperactive" | "combined" | "below";
+    threshold: number;
   };
   onReset: () => void;
+  onboarding: OnboardingData | null;
 }) {
-  const plan = TASKS[result.key];
-  const storageKey = `adhd-tasks-${result.key}-${new Date().toISOString().slice(0, 10)}`;
+  const basePlan = TASKS[result.key];
+  const medTask = onboarding ? MED_TASK[onboarding.meds] : null;
+  const planTasks = medTask ? [...basePlan.tasks, medTask] : basePlan.tasks;
+  const medLabel = onboarding
+    ? MED_OPTIONS.find((m) => m.value === onboarding.meds)?.label
+    : null;
+  const storageKey = `adhd-tasks-${result.key}-${onboarding?.meds ?? "x"}-${new Date()
+    .toISOString()
+    .slice(0, 10)}`;
   const [done, setDone] = useState<Record<number, boolean>>(() => {
     if (typeof window === "undefined") return {};
     try {
@@ -569,16 +770,31 @@ function Results({
           {result.description}
         </p>
 
+        {onboarding && (
+          <div className="mt-5 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">
+              Age {onboarding.age} · threshold {result.threshold}+
+            </span>
+            {medLabel && (
+              <span className="rounded-full bg-accent/50 px-3 py-1 text-accent-foreground">
+                💊 {medLabel}
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <ScoreCard
             label="Inattention"
             count={result.inattCount}
             met={result.inattMet}
+            threshold={result.threshold}
           />
           <ScoreCard
             label="Hyperactivity-Impulsivity"
             count={result.hyperCount}
             met={result.hyperMet}
+            threshold={result.threshold}
           />
         </div>
       </div>
@@ -590,17 +806,18 @@ function Results({
               Today's plan
             </p>
             <h3 className="mt-2 text-2xl font-semibold tracking-tight">
-              {plan.headline}
+              {basePlan.headline}
             </h3>
           </div>
           <div className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-            {completed}/{plan.tasks.length} done
+            {completed}/{planTasks.length} done
           </div>
         </div>
 
         <ul className="mt-6 space-y-2.5">
-          {plan.tasks.map((t, i) => {
+          {planTasks.map((t, i) => {
             const checked = !!done[i];
+            const isMed = medTask && i === planTasks.length - 1;
             return (
               <li key={i}>
                 <button
@@ -625,6 +842,11 @@ function Results({
                     ✓
                   </span>
                   <span className="flex-1">
+                    {isMed && (
+                      <span className="mb-1 inline-block rounded-full bg-accent/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent-foreground">
+                        Medication-tailored
+                      </span>
+                    )}
                     <span
                       className={
                         "block text-[15px] font-medium leading-snug " +
@@ -651,8 +873,9 @@ function Results({
       <div className="rounded-2xl bg-accent/40 p-6 text-sm leading-relaxed text-accent-foreground">
         <strong className="font-semibold">A note on interpretation.</strong> This
         screener counts a symptom toward the DSM-5 threshold when you answered
-        “often” or “very often.” For adolescents 17+ and adults, 5 or more symptoms
-        in a domain meets the count; children require 6. A diagnosis also requires
+        “often” or “very often.” Your threshold of <strong>{result.threshold}+</strong>{" "}
+        reflects the DSM-5 rule for your age group (6+ under 17, 5+ for 17 and older).
+        A diagnosis also requires
         onset before age 12, symptoms in 2+ settings, and clinically significant
         impairment — only a qualified clinician can establish that.
       </div>
@@ -679,10 +902,12 @@ function ScoreCard({
   label,
   count,
   met,
+  threshold,
 }: {
   label: string;
   count: number;
   met: boolean;
+  threshold: number;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-background p-5">
@@ -701,7 +926,7 @@ function ScoreCard({
             : "bg-muted text-muted-foreground")
         }
       >
-        {met ? "Threshold met (5+)" : "Below threshold"}
+        {met ? `Threshold met (${threshold}+)` : `Below threshold (${threshold}+)`}
       </p>
     </div>
   );
