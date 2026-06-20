@@ -469,15 +469,16 @@ function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
-        DSM-5 self-screener
+        WHO ASRS v1.1 · adult ADHD screener
       </p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-6xl">
         How does your brain run?
       </h1>
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-        18 quick questions, one at a time. Use the buttons, tap a number key
-        <Kbd>1</Kbd>–<Kbd>5</Kbd>, or arrow back if you change your mind. Built
-        around the DSM-5 criteria — for reflection, not diagnosis.
+        The 18-item Adult ADHD Self-Report Scale from the World Health
+        Organization (Kessler et al., 2005). One question at a time — tap a
+        number key <Kbd>1</Kbd>–<Kbd>5</Kbd>, or arrow back to change an
+        answer. For reflection, not diagnosis.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
