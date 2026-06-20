@@ -104,6 +104,7 @@ const OnboardingSchema = z.object({
     .min(5, "Must be 5 or older")
     .max(120, "Enter a realistic age"),
   meds: z.enum(["none", "considering", "current", "former"]),
+  otherMeds: z.enum(["yes", "no", "preferNot"]).optional(),
 });
 type OnboardingData = z.infer<typeof OnboardingSchema>;
 
@@ -568,13 +569,23 @@ function OnboardingStep({
 }) {
   const [ageInput, setAgeInput] = useState(initial ? String(initial.age) : "");
   const [meds, setMeds] = useState<MedStatus | null>(initial?.meds ?? null);
+  const [otherMeds, setOtherMeds] = useState<"yes" | "no" | "preferNot" | null>(
+    initial?.otherMeds ?? null,
+  );
   const [errors, setErrors] = useState<{ age?: string; meds?: string }>({});
+
+  const OTHER_MED_OPTIONS: { value: "yes" | "no" | "preferNot"; label: string; hint: string }[] = [
+    { value: "yes", label: "Yes", hint: "e.g. antidepressants, anxiety meds, pain relief" },
+    { value: "no", label: "No", hint: "Not taking any other medication" },
+    { value: "preferNot", label: "Prefer not to say", hint: "You can skip this" },
+  ];
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = OnboardingSchema.safeParse({
       age: ageInput === "" ? Number.NaN : Number(ageInput),
       meds: meds ?? undefined,
+      otherMeds: otherMeds ?? undefined,
     });
     if (!parsed.success) {
       const flat = parsed.error.flatten().fieldErrors;
@@ -594,15 +605,16 @@ function OnboardingStep({
       className="flex flex-1 flex-col justify-center py-10 animate-fade-up"
     >
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
-        Two quick questions
+        Three quick questions
       </p>
       <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
         Help us tailor your result
       </h2>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
         We use your age to set the right DSM-5 symptom threshold (6+ for
-        under 17, 5+ for 17 and older) and your medication status to
-        personalise today's tasks. Nothing leaves your device.
+        under 17, 5+ for 17 and older), your ADHD medication status, and
+        any other medicines you take to personalise today's tasks.
+        Nothing leaves your device.
       </p>
 
       <div className="mt-8 space-y-7">
@@ -666,6 +678,38 @@ function OnboardingStep({
           {errors.meds && (
             <p className="mt-2 text-xs text-destructive">{errors.meds}</p>
           )}
+        </fieldset>
+
+        <fieldset>
+          <legend className="block text-sm font-medium text-foreground">
+            Are you taking any non-ADHD medication?
+          </legend>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {OTHER_MED_OPTIONS.map((opt) => {
+              const selected = otherMeds === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setOtherMeds(opt.value)}
+                  className={
+                    "rounded-2xl border px-4 py-3 text-left transition " +
+                    (selected
+                      ? "border-primary bg-primary/10 shadow-sm"
+                      : "border-border bg-card hover:border-primary/50")
+                  }
+                  aria-pressed={selected}
+                >
+                  <span className="block text-sm font-medium text-foreground">
+                    {opt.label}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {opt.hint}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </fieldset>
       </div>
 
@@ -953,6 +997,16 @@ function Results({
             {medLabel && (
               <span className="rounded-full bg-accent/50 px-3 py-1 text-accent-foreground">
                 {medLabel}
+              </span>
+            )}
+            {onboarding.otherMeds === "yes" && (
+              <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                Taking other medication
+              </span>
+            )}
+            {onboarding.otherMeds === "preferNot" && (
+              <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                Medication: prefer not to say
               </span>
             )}
           </div>
