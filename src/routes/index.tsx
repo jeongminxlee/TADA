@@ -1017,9 +1017,11 @@ function Results({
         symptoms highly consistent with adult ADHD. All 18 items also map to
         DSM-5 inattentive and hyperactive-impulsive symptom counts; your
         threshold of <strong>{result.threshold}+</strong> reflects the DSM-5
-        age rule (6+ under 17, 5+ for 17 and older). Diagnosis also requires
-        onset before age 12, symptoms in 2+ settings, and clinically
-        significant impairment — only a qualified clinician can establish
+        age rule (6+ under 17, 5+ for 17 and older). NICE guideline NG87 is
+        the UK standard for ADHD assessment and care. A diagnosis also
+        requires onset before age 12, symptoms in 2+ settings, and
+        clinically significant impairment — only a GP or NHS specialist
+        (typically a psychiatrist or specialist ADHD service) can establish
         that.
       </div>
 
@@ -1033,9 +1035,10 @@ function Results({
         </button>
       </div>
       <p className="pt-6 text-xs leading-relaxed text-muted-foreground">
-        This tool is for educational purposes only and does not replace a clinical
-        evaluation. DSM-5 also requires symptom onset before age 12, presence in 2+
-        settings, and clinically significant impairment.
+        For educational use only and not a substitute for NHS clinical
+        assessment. If you're in distress, call NHS 111 (or 999 in an
+        emergency). For mental health support, contact the Samaritans on
+        116 123.
       </p>
     </div>
   );
