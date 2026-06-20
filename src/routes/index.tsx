@@ -69,6 +69,121 @@ const QUESTIONS: Q[] = [
   })),
 ];
 
+// Daily tasks drawn from clinical literature on ADHD management:
+// CBT for adult ADHD (Safren et al., 2005, 2010), Barkley's executive
+// function framework (2012), NICE guideline NG87, and CHADD clinical
+// summaries. Each task targets a mechanism shown to reduce functional
+// impairment in that symptom domain.
+type Task = { title: string; why: string };
+
+const TASKS: Record<
+  "inattentive" | "hyperactive" | "combined" | "below",
+  { headline: string; tasks: Task[] }
+> = {
+  inattentive: {
+    headline:
+      "Daily plan to support attention, memory, and follow-through",
+    tasks: [
+      {
+        title: "Do a 5-minute morning planning ritual",
+        why: "Externalizing the day's 1–3 priorities on paper offloads working memory and is a core Safren CBT module for adult ADHD.",
+      },
+      {
+        title: "Use one capture inbox for every task and idea",
+        why: "A single trusted list (paper or app) prevents forgotten obligations — a top predictor of impairment in inattentive ADHD.",
+      },
+      {
+        title: "Work in two 25-minute focus blocks with a visible timer",
+        why: "Time-boxing and external timers compensate for time-blindness and sustain effort on low-stimulation tasks (Barkley, 2012).",
+      },
+      {
+        title: "Body-double or use a 'launchpad' for one avoided task",
+        why: "Pairing an aversive task with a person, call, or fixed spot raises activation — addresses task-initiation failure.",
+      },
+      {
+        title: "Do a 3-minute end-of-day shutdown review",
+        why: "Reviewing what got done and parking tomorrow's first step reduces next-day startup friction (CBT-ADHD, NICE NG87).",
+      },
+    ],
+  },
+  hyperactive: {
+    headline: "Daily plan to channel restlessness and reduce impulsivity",
+    tasks: [
+      {
+        title: "Move first thing — 20–30 minutes of moderate exercise",
+        why: "Aerobic activity acutely improves response inhibition and lowers restlessness; consistent finding across ADHD exercise meta-analyses.",
+      },
+      {
+        title: "Schedule structured movement breaks every 60–90 minutes",
+        why: "Planned breaks prevent the seated-restlessness build-up that drives impulsive task-switching.",
+      },
+      {
+        title: "Practice the 'pause-and-name' rule before sending or speaking",
+        why: "A 10-second pause before replies/decisions targets impulsive verbal and behavioral intrusions (CBT impulse-control module).",
+      },
+      {
+        title: "Use a fidget, standing desk, or walking meeting once today",
+        why: "Permitting controlled motor outlets is a recommended environmental modification (CHADD, Barkley).",
+      },
+      {
+        title: "Protect a fixed wind-down window with no screens",
+        why: "Sleep restriction worsens impulsivity the next day; consistent sleep timing is a first-line behavioral intervention.",
+      },
+    ],
+  },
+  combined: {
+    headline:
+      "Daily plan blending attention scaffolds with impulse and energy regulation",
+    tasks: [
+      {
+        title: "Morning: move 20+ minutes, then plan top 3 tasks",
+        why: "Exercise primes executive function; planning right after captures that window (Safren CBT + exercise literature).",
+      },
+      {
+        title: "Time-box work in 25/5 cycles with a visible timer",
+        why: "External time cues address both time-blindness and the urge to switch tasks impulsively.",
+      },
+      {
+        title: "Use one capture inbox + a 'parking lot' for stray ideas",
+        why: "Catching intrusive thoughts on paper lets you keep working instead of acting on them.",
+      },
+      {
+        title: "Pause 10 seconds before sending messages or saying yes",
+        why: "A brief delay reduces impulsive commitments and interrupts — a high-yield CBT skill in combined presentation.",
+      },
+      {
+        title: "Fixed bedtime and 3-minute shutdown review",
+        why: "Sleep regularity and end-of-day review together reduce next-day impulsivity and forgetting (NICE NG87).",
+      },
+    ],
+  },
+  below: {
+    headline: "General executive-function support",
+    tasks: [
+      {
+        title: "Write today's top 3 priorities before opening any inbox",
+        why: "Pre-commitment to priorities protects against reactive task-switching.",
+      },
+      {
+        title: "Move for 20+ minutes",
+        why: "Aerobic exercise reliably improves attention and mood across populations.",
+      },
+      {
+        title: "Take one screen-free 10-minute break",
+        why: "Brief attentional rest restores sustained-attention capacity.",
+      },
+      {
+        title: "Keep a consistent sleep window",
+        why: "Sleep regularity is one of the strongest modifiable predictors of next-day focus.",
+      },
+      {
+        title: "End the day with a 3-minute review",
+        why: "Reflection consolidates learning and reduces tomorrow's startup friction.",
+      },
+    ],
+  },
+};
+
 function Index() {
   const total = QUESTIONS.length;
   const [answers, setAnswers] = useState<Answers>({});
@@ -93,23 +208,27 @@ function Index() {
     const hyperMet = hyperCount >= ADULT_SYMPTOM_THRESHOLD;
 
     let subtype = "Below DSM-5 symptom threshold";
+    let key: "inattentive" | "hyperactive" | "combined" | "below" = "below";
     let description =
       "Your responses don't reach the DSM-5 symptom threshold for an ADHD presentation. Symptoms may still affect you — consider speaking with a clinician if they cause distress or impairment.";
     if (inattMet && hyperMet) {
       subtype = "Combined Presentation";
+      key = "combined";
       description =
         "You endorsed enough symptoms in both the inattentive and the hyperactive-impulsive domains to meet the DSM-5 symptom threshold for the Combined Presentation.";
     } else if (inattMet) {
       subtype = "Predominantly Inattentive Presentation";
+      key = "inattentive";
       description =
         "You endorsed enough inattentive symptoms to meet the DSM-5 threshold, without reaching it for the hyperactive-impulsive domain.";
     } else if (hyperMet) {
       subtype = "Predominantly Hyperactive-Impulsive Presentation";
+      key = "hyperactive";
       description =
         "You endorsed enough hyperactive-impulsive symptoms to meet the DSM-5 threshold, without reaching it for the inattentive domain.";
     }
 
-    return { inattCount, hyperCount, inattMet, hyperMet, subtype, description };
+    return { inattCount, hyperCount, inattMet, hyperMet, subtype, description, key };
   }, [answers]);
 
   function pick(value: number) {
@@ -416,9 +535,27 @@ function Results({
     hyperMet: boolean;
     subtype: string;
     description: string;
+    key: "inattentive" | "hyperactive" | "combined" | "below";
   };
   onReset: () => void;
 }) {
+  const plan = TASKS[result.key];
+  const storageKey = `adhd-tasks-${result.key}-${new Date().toISOString().slice(0, 10)}`;
+  const [done, setDone] = useState<Record<number, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || "{}");
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, JSON.stringify(done));
+    }
+  }, [done, storageKey]);
+  const completed = Object.values(done).filter(Boolean).length;
+
   return (
     <div className="space-y-8 py-8 animate-fade-up">
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
@@ -444,6 +581,71 @@ function Results({
             met={result.hyperMet}
           />
         </div>
+      </div>
+
+      <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+              Today's plan
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-tight">
+              {plan.headline}
+            </h3>
+          </div>
+          <div className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+            {completed}/{plan.tasks.length} done
+          </div>
+        </div>
+
+        <ul className="mt-6 space-y-2.5">
+          {plan.tasks.map((t, i) => {
+            const checked = !!done[i];
+            return (
+              <li key={i}>
+                <button
+                  type="button"
+                  onClick={() => setDone((d) => ({ ...d, [i]: !d[i] }))}
+                  className={
+                    "group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition " +
+                    (checked
+                      ? "border-primary/40 bg-primary/5"
+                      : "border-border bg-background hover:border-primary/40")
+                  }
+                >
+                  <span
+                    className={
+                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition " +
+                      (checked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-transparent group-hover:border-primary/50")
+                    }
+                    aria-hidden
+                  >
+                    ✓
+                  </span>
+                  <span className="flex-1">
+                    <span
+                      className={
+                        "block text-[15px] font-medium leading-snug " +
+                        (checked ? "text-muted-foreground line-through" : "text-foreground")
+                      }
+                    >
+                      {t.title}
+                    </span>
+                    <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                      {t.why}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
+          Drawn from CBT for adult ADHD (Safren et al., 2005/2010), Barkley's executive-function framework (2012), NICE guideline NG87, and CHADD clinical summaries. These are self-management strategies, not a treatment plan — a clinician can personalize them.
+        </p>
       </div>
 
       <div className="rounded-2xl bg-accent/40 p-6 text-sm leading-relaxed text-accent-foreground">
