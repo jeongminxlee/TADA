@@ -343,6 +343,82 @@ function ageThreshold(age: number) {
   return age < 17 ? 6 : 5;
 }
 
+// Adaptive task derived from the latest daily check-in. We translate the
+// user's current mood / focus / energy / state tags into a single
+// evidence-aligned action drawn from the same literature as the static
+// plan (Safren CBT-ADHD, Barkley 2012, NICE NG87). This is what makes the
+// dashboard responsive to symptom changes day-to-day.
+function adaptiveTask(c: CheckIn | null): { task: Task; reason: string } | null {
+  if (!c) return null;
+  const tags = (c.tags ?? []).map((t) => t.toLowerCase());
+  const has = (t: string) => tags.includes(t);
+
+  if (has("overwhelmed") || has("anxious")) {
+    return {
+      task: {
+        title: "Brain-dump for 3 minutes, then circle one thing",
+        why: "Externalising everything on your mind reduces cognitive load and lowers anxiety before choosing a next step (CBT-ADHD).",
+      },
+      reason: `You logged feeling ${tags.find((t) => t === "overwhelmed" || t === "anxious")} today.`,
+    };
+  }
+  if (has("restless") || has("wired")) {
+    return {
+      task: {
+        title: "Take a 5-minute brisk walk, then start the next task",
+        why: "Short movement bursts down-regulate hyperarousal and improve response inhibition for the next 20–30 minutes.",
+      },
+      reason: "You logged restless/wired energy — channel it before sitting back down.",
+    };
+  }
+  if (has("low") || (c.mood !== null && c.mood !== undefined && c.mood <= 2)) {
+    return {
+      task: {
+        title: "Pick the smallest possible 2-minute task and do it now",
+        why: "On low-mood days, momentum from a tiny win is more reliable than willpower (behavioural activation; CBT-ADHD).",
+      },
+      reason: "Your mood check-in is low today — keep the bar small.",
+    };
+  }
+  if (c.energy !== null && c.energy !== undefined && c.energy <= 2) {
+    return {
+      task: {
+        title: "Shrink today's top task to one 10-minute slice",
+        why: "Matching task size to current energy prevents the all-or-nothing crash typical in ADHD low-energy days.",
+      },
+      reason: "Energy is low — work with it, not against it.",
+    };
+  }
+  if (c.focus !== null && c.focus !== undefined && c.focus >= 4) {
+    return {
+      task: {
+        title: "Ride the focus — start the hardest task in a 25-min block",
+        why: "Protect rare high-focus windows for high-effort work; this is the highest-yield use of executive function (Barkley, 2012).",
+      },
+      reason: "Focus is high — spend it on what matters most.",
+    };
+  }
+  if (has("hyperfocused")) {
+    return {
+      task: {
+        title: "Set a 45-minute alarm and a transition cue",
+        why: "Hyperfocus is productive but blocks task-switching; an external stop signal prevents over-running other commitments.",
+      },
+      reason: "You're in hyperfocus — protect it without losing the day.",
+    };
+  }
+  if (has("scattered") || (c.focus !== null && c.focus !== undefined && c.focus <= 2)) {
+    return {
+      task: {
+        title: "Write your next single action on paper, then start a 10-min timer",
+        why: "A visible cue plus an external timer compensates for scattered attention better than re-reading a long list.",
+      },
+      reason: "Focus is scattered — make the next step external and concrete.",
+    };
+  }
+  return null;
+}
+
 function Index() {
   const total = QUESTIONS.length;
   const [answers, setAnswers] = useState<Answers>({});
