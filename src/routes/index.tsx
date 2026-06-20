@@ -943,6 +943,13 @@ function Results({
   }, [done, storageKey]);
   const completed = Object.values(done).filter(Boolean).length;
 
+  const [dashTab, setDashTab] = useState<"mood" | "tasks" | "coach">("mood");
+  const dashTabs: { id: "mood" | "tasks" | "coach"; label: string; hint: string }[] = [
+    { id: "mood", label: "Mood", hint: "Daily check-in" },
+    { id: "tasks", label: "Tasks", hint: "Today's plan" },
+    { id: "coach", label: "Coach", hint: "AI nudge" },
+  ];
+
   return (
     <div className="space-y-8 py-8 animate-fade-up">
       <div
@@ -1029,11 +1036,56 @@ function Results({
       </div>
 
       <MoodReminderBanner />
-      <MoodCard />
-      <CheckInCard />
 
-      <NudgeCard subtype={result.subtype} />
+      <section className="rounded-3xl border border-border bg-card/60 p-4 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+              Your dashboard
+            </p>
+            <h3 className="mt-1 text-xl font-semibold tracking-tight">
+              Daily tools
+            </h3>
+          </div>
+          <div
+            role="tablist"
+            aria-label="Dashboard sections"
+            className="inline-flex rounded-full bg-secondary p-1 text-xs font-medium"
+          >
+            {dashTabs.map((t) => {
+              const active = dashTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  role="tab"
+                  aria-selected={active}
+                  type="button"
+                  onClick={() => setDashTab(t.id)}
+                  className={
+                    "rounded-full px-3 py-1.5 transition " +
+                    (active
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
+        <div className="mt-5 space-y-6">
+          {dashTab === "mood" && (
+            <>
+              <MoodCard />
+              <CheckInCard />
+            </>
+          )}
+
+          {dashTab === "coach" && <NudgeCard subtype={result.subtype} />}
+
+          {dashTab === "tasks" && (
       <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -1111,6 +1163,9 @@ function Results({
           personalise them.
         </p>
       </div>
+          )}
+        </div>
+      </section>
 
       <NhsNextSteps partAPositive={result.partAPositive} />
 
