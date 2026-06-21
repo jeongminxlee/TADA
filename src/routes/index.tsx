@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { User } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { LogoMark } from "@/components/leaf";
+import { Leaf } from "@/components/leaf";
 import {
   TASKS,
   adaptiveTask,
