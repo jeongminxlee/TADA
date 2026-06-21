@@ -2285,7 +2285,6 @@ export function seedDemoData() {
 
   const today = todayISO();
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  const twoDaysAgo = new Date(Date.now() - 172800000).toISOString().slice(0, 10);
 
   // Onboarding: 28, currently medicated, combined presentation
   const onboarding: OnboardingData = { age: 28, meds: "current", otherMeds: "no" };
