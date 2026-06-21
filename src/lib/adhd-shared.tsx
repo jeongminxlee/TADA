@@ -577,28 +577,6 @@ export function BackgroundBlobs() {
 }
 
 export function Intro({ onStart }: { onStart: () => void }) {
-  const [ageInput, setAgeInput] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const parsed = ageInput === "" ? NaN : Number(ageInput);
-  const isValidAdult = Number.isFinite(parsed) && parsed >= 18 && parsed <= 120;
-
-  function handleStart() {
-    if (ageInput === "" || !Number.isFinite(parsed)) {
-      setError("Please enter your age to continue.");
-      return;
-    }
-    if (parsed < 18) {
-      setError("Sorry — this app is only available to people aged 18 or over.");
-      return;
-    }
-    if (parsed > 120) {
-      setError("Please enter a realistic age.");
-      return;
-    }
-    setError(null);
-    onStart();
-  }
-
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
@@ -613,43 +591,10 @@ export function Intro({ onStart }: { onStart: () => void }) {
         change anything later. Aligned with NICE guideline NG87. For
         reflection — only a GP or NHS specialist can diagnose ADHD.
       </p>
-      <div className="mt-8 w-full max-w-xs">
-        <label htmlFor="intro-age" className="block text-sm font-medium text-foreground">
-          Your age
-        </label>
-        <input
-          id="intro-age"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={120}
-          value={ageInput}
-          onChange={(e) => {
-            setAgeInput(e.target.value);
-            if (error) setError(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleStart();
-          }}
-          placeholder="e.g. 23"
-          aria-invalid={!!error}
-          aria-describedby={error ? "intro-age-error" : "intro-age-help"}
-          className="mt-2 h-12 w-full rounded-xl border border-border bg-card px-4 text-base outline-none ring-0 focus:border-primary"
-        />
-        <p id="intro-age-help" className="mt-2 text-xs text-muted-foreground">
-          This app is for adults aged 18 and over.
-        </p>
-        {error && (
-          <p id="intro-age-error" className="mt-2 text-xs text-destructive">
-            {error}
-          </p>
-        )}
-      </div>
-      <div className="mt-6 flex flex-wrap items-center gap-3">
+      <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
-          onClick={handleStart}
-          disabled={!isValidAdult}
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+          onClick={onStart}
+          className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30"
         >
           Let's go
           <span className="transition-transform group-hover:translate-x-0.5">→</span>
