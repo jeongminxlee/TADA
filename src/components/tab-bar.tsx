@@ -42,9 +42,7 @@ export function TabBar() {
                 }
                 aria-current={active ? "page" : undefined}
               >
-                <span aria-hidden className="text-lg leading-none">
-                  {t.icon}
-                </span>
+                <span aria-hidden>{t.icon}</span>
                 <span>{t.label}</span>
               </Link>
             </li>
