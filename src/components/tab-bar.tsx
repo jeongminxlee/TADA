@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 
 type Tab = {
-  to: "/" | "/tasks" | "/calendar" | "/mood" | "/more";
+  to: "/" | "/tasks" | "/chat" | "/calendar" | "/mood" | "/more";
   label: string;
   icon: string;
 };
@@ -9,9 +9,10 @@ type Tab = {
 const TABS: Tab[] = [
   { to: "/", label: "Home", icon: "🏠" },
   { to: "/tasks", label: "Tasks", icon: "✓" },
+  { to: "/chat", label: "Chat", icon: "💬" },
   { to: "/calendar", label: "Calendar", icon: "📅" },
   { to: "/mood", label: "Mood", icon: "◐" },
-  { to: "/more", label: "More", icon: "⋯" },
+  { to: "/more", label: "Content", icon: "⋯" },
 ];
 
 export function TabBar() {
