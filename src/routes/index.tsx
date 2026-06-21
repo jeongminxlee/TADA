@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { User } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { LogoMark } from "@/components/leaf";
+import { Leaf } from "@/components/leaf";
 import {
   TASKS,
   adaptiveTask,
@@ -101,7 +101,14 @@ function HomeRoute() {
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 pb-32">
           <div className="text-center">
             <h2 className="flex items-center justify-center gap-3 text-3xl font-semibold tracking-tight">
-              <LogoMark className="h-12 w-12 drop-shadow-sm" />
+              <div className="relative h-12 w-12">
+                <img
+                  src="/tada-logo.png"
+                  alt=""
+                  className="h-12 w-12 object-contain drop-shadow-sm"
+                />
+                <Leaf className="absolute -bottom-1 -right-2 h-5 w-5 rotate-[25deg] text-accent" />
+              </div>
               <span className="bg-gradient-to-br from-primary via-foreground to-accent bg-clip-text text-transparent">
                 TADA
               </span>
