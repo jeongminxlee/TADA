@@ -146,7 +146,7 @@ function OnboardingRoute() {
         className="relative mx-auto flex min-h-[100dvh] max-w-md flex-col px-5 pb-8 pt-6"
         style={{ paddingTop: "max(env(safe-area-inset-top), 1.5rem)" }}
       >
-        {phase === "intro" && <Intro onStart={() => setPhase("onboarding")} />}
+        {phase === "intro" && <Intro onStart={() => setPhase("onboarding")} onSkip={skipWithDemo} />}
 
         {phase === "onboarding" && (
           <OnboardingStep
