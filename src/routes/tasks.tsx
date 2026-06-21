@@ -286,6 +286,67 @@ function TasksRoute() {
             </p>
           )}
 
+          {planTasks.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {planTasks.map((t, i) => {
+                const checked = !!done[i];
+                const isAdaptive = !!adaptive && i === 0;
+                const isMed = !!medTask && i === planTasks.length - 1;
+                return (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      onClick={() => togglePlanTask(i)}
+                      className={
+                        "group flex w-full items-start gap-3 rounded-xl border p-3 text-left transition " +
+                        (checked
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border bg-background active:bg-accent/30")
+                      }
+                    >
+                      <span
+                        aria-hidden
+                        className={
+                          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border " +
+                          (checked
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-transparent")
+                        }
+                      >
+                        ✓
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-1">
+                          {isAdaptive && (
+                            <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-primary">
+                              Adapted
+                            </span>
+                          )}
+                          {isMed && (
+                            <span className="rounded-full bg-accent/60 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-accent-foreground">
+                              Medication
+                            </span>
+                          )}
+                        </span>
+                        <span
+                          className={
+                            "mt-0.5 block text-sm font-medium leading-snug " +
+                            (checked ? "text-muted-foreground line-through" : "text-foreground")
+                          }
+                        >
+                          {t.title}
+                        </span>
+                        <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
+                          {t.why}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
           <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Your to-dos
           </p>
