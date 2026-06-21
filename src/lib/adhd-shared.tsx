@@ -2308,53 +2308,73 @@ export function seedDemoData() {
 
   saveOnboardingResult({ onboarding, result, answers, completedAt: new Date().toISOString() });
 
-  // Check-ins for the last few days
-  const checkins: CheckIn[] = [
-    {
-      date: twoDaysAgo,
-      mood: 3,
-      focus: 3,
-      energy: 4,
-      tags: ["calm", "motivated"],
-      note: "Steady day, got a lot done.",
-    },
-    {
-      date: yesterday,
-      mood: 2,
-      focus: 2,
-      energy: 2,
-      tags: ["tired", "low"],
-      note: "Rough night, everything felt harder.",
-    },
-    {
-      date: today,
-      mood: 4,
-      focus: 3,
-      energy: 3,
-      tags: ["motivated", "scattered"],
-      note: "Feeling productive but easily pulled away.",
-    },
+  // Check-ins for the last 14 days — gives the calendar & trends real shape
+  const moodScript: Array<{
+    mood: number;
+    focus: number;
+    energy: number;
+    tags: string[];
+    note: string;
+  }> = [
+    { mood: 2, focus: 2, energy: 2, tags: ["tired", "foggy"], note: "Slow start, couldn't get going." },
+    { mood: 3, focus: 3, energy: 3, tags: ["calm"], note: "Middle-of-the-road day." },
+    { mood: 4, focus: 4, energy: 3, tags: ["motivated", "focused"], note: "Deep work session this morning felt great." },
+    { mood: 3, focus: 2, energy: 3, tags: ["scattered"], note: "Lots of small interruptions." },
+    { mood: 5, focus: 4, energy: 4, tags: ["motivated", "social"], note: "Coffee with Jamie totally lifted my mood." },
+    { mood: 2, focus: 2, energy: 1, tags: ["tired", "low"], note: "Bad sleep, brain felt offline." },
+    { mood: 3, focus: 3, energy: 3, tags: ["calm", "steady"], note: "Quiet Sunday reset." },
+    { mood: 4, focus: 3, energy: 4, tags: ["motivated"], note: "Knocked out the gym + groceries before noon." },
+    { mood: 3, focus: 4, energy: 3, tags: ["focused"], note: "Hyperfocused on the design doc, forgot lunch." },
+    { mood: 2, focus: 2, energy: 2, tags: ["anxious", "overwhelmed"], note: "Inbox spiraled, hard to start anything." },
+    { mood: 3, focus: 3, energy: 3, tags: ["calm"], note: "Took a walk, came back clearer." },
+    { mood: 4, focus: 4, energy: 4, tags: ["motivated", "focused"], note: "Best day of the week — meds + sleep aligned." },
+    { mood: 2, focus: 2, energy: 2, tags: ["tired", "low"], note: "Rough night, everything felt harder." },
+    { mood: 4, focus: 3, energy: 3, tags: ["motivated", "scattered"], note: "Feeling productive but easily pulled away." },
   ];
+  const checkins: CheckIn[] = moodScript.map((entry, i) => {
+    const daysAgo = moodScript.length - 1 - i;
+    const date = new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 10);
+    return { date, ...entry };
+  });
   saveCheckIns(checkins);
 
-  // Custom to-dos for today
+  // Custom to-dos for today — pre-scheduled across the day for the calendar view
   const customKey = `adhd-custom-tasks-${today}`;
   localStorage.setItem(
     customKey,
     JSON.stringify([
-      { id: 1001, title: "Reply to Sarah's message", done: true },
-      { id: 1002, title: "Book dentist", done: false },
-      { id: 1003, title: "Pack gym bag", done: false },
+      { id: 1001, title: "Morning walk + coffee", done: true, startMin: 7 * 60 + 30, durationMin: 30 },
+      { id: 1002, title: "Reply to Sarah's message", done: true, startMin: 9 * 60, durationMin: 15 },
+      { id: 1003, title: "Standup with team", done: true, startMin: 9 * 60 + 30, durationMin: 30 },
+      { id: 1004, title: "Draft Q3 design doc", done: false, startMin: 10 * 60 + 30, durationMin: 90 },
+      { id: 1005, title: "Lunch + stretch", done: false, startMin: 12 * 60 + 30, durationMin: 45 },
+      { id: 1006, title: "Book dentist appointment", done: false, startMin: 13 * 60 + 30, durationMin: 15 },
+      { id: 1007, title: "Review PRs", done: false, startMin: 14 * 60, durationMin: 60 },
+      { id: 1008, title: "Pick up groceries", done: false, startMin: 17 * 60, durationMin: 45 },
+      { id: 1009, title: "Gym — leg day", done: false, startMin: 18 * 60, durationMin: 60 },
+      { id: 1010, title: "Cook dinner with Alex", done: false, startMin: 19 * 60 + 30, durationMin: 45 },
+      { id: 1011, title: "Read 20 pages", done: false, startMin: 21 * 60 + 30, durationMin: 30 },
+    ]),
+  );
+
+  // Yesterday's to-dos (mostly done) so history feels populated
+  localStorage.setItem(
+    `adhd-custom-tasks-${yesterday}`,
+    JSON.stringify([
+      { id: 2001, title: "Submit expense report", done: true, startMin: 9 * 60, durationMin: 30 },
+      { id: 2002, title: "Therapy session", done: true, startMin: 11 * 60, durationMin: 60 },
+      { id: 2003, title: "Laundry", done: true, startMin: 14 * 60, durationMin: 45 },
+      { id: 2004, title: "Call mum", done: false, startMin: 19 * 60, durationMin: 30 },
     ]),
   );
 
   // Plan task progress (today's key includes adaptive task because of "scattered" tag)
   const adaptiveFp = "Write your next single acti";
   const tasksKey = `adhd-tasks-combined-current-${adaptiveFp}-${today}`;
-  localStorage.setItem(tasksKey, JSON.stringify({ "0": true, "1": true }));
+  localStorage.setItem(tasksKey, JSON.stringify({ "0": true, "1": true, "2": true }));
 
-  // Points & rewards
-  seedPoints(125, [50]);
+  // Points & rewards — enough to have unlocked Sprout and be partway to Bloom
+  seedPoints(185, [50]);
 
   window.dispatchEvent(new CustomEvent("adhd-checkins-changed"));
   window.dispatchEvent(new CustomEvent("adhd-onboarding-changed"));
