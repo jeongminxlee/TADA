@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   TASKS,
@@ -56,6 +56,72 @@ function TasksRoute() {
     if (typeof window !== "undefined") localStorage.setItem(storageKey, JSON.stringify(done));
   }, [done, storageKey]);
   const completed = Object.values(done).filter(Boolean).length;
+
+  // Custom user-added to-dos (with optional voice input)
+  const customKey = `adhd-custom-tasks-${todayISO()}`;
+  const [custom, setCustom] = useState<{ id: number; title: string; done: boolean }[]>(() => {
+    if (typeof window === "undefined") return [];
+    try { return JSON.parse(localStorage.getItem(customKey) || "[]"); } catch { return []; }
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem(customKey, JSON.stringify(custom));
+  }, [custom, customKey]);
+
+  const [draft, setDraft] = useState("");
+  const [listening, setListening] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const recRef = useRef<any>(null);
+
+  const addCustom = (text: string) => {
+    const t = text.trim();
+    if (!t) return;
+    setCustom((c) => [...c, { id: Date.now() + Math.random(), title: t, done: false }]);
+    setDraft("");
+  };
+
+  const toggleVoice = () => {
+    setVoiceError(null);
+    if (listening) {
+      recRef.current?.stop();
+      return;
+    }
+    const SR: any =
+      typeof window !== "undefined" &&
+      ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    if (!SR) {
+      setVoiceError("Voice input isn't supported in this browser. Try Chrome or Safari.");
+      return;
+    }
+    const rec = new SR();
+    rec.lang = "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    let finalText = "";
+    rec.onresult = (e: any) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += r[0].transcript;
+        else interim += r[0].transcript;
+      }
+      setDraft((finalText + interim).trim());
+    };
+    rec.onerror = (e: any) => {
+      setVoiceError(e?.error === "not-allowed" ? "Microphone permission denied." : "Couldn't capture voice. Try again.");
+      setListening(false);
+    };
+    rec.onend = () => {
+      setListening(false);
+      if (finalText.trim()) addCustom(finalText);
+    };
+    recRef.current = rec;
+    try {
+      rec.start();
+      setListening(true);
+    } catch {
+      setVoiceError("Couldn't start voice input.");
+    }
+  };
 
   return (
     <AppShell
@@ -147,6 +213,99 @@ function TasksRoute() {
               );
             })}
           </ul>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-primary">Your to-dos</p>
+          <p className="mt-0.5 text-sm font-semibold">Add your own — type or speak</p>
+
+          <form
+            onSubmit={(e) => { e.preventDefault(); addCustom(draft); }}
+            className="mt-3 flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={listening ? "Listening…" : "e.g. Email Sam back"}
+              className="h-10 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none focus:border-primary"
+            />
+            <button
+              type="button"
+              onClick={toggleVoice}
+              aria-label={listening ? "Stop voice input" : "Add to-do by voice"}
+              aria-pressed={listening}
+              className={
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition " +
+                (listening
+                  ? "border-primary bg-primary text-primary-foreground animate-pulse"
+                  : "border-border bg-background hover:bg-accent/30")
+              }
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <rect x="9" y="3" width="6" height="12" rx="3" />
+                <path d="M5 11a7 7 0 0 0 14 0" />
+                <line x1="12" y1="18" x2="12" y2="22" />
+              </svg>
+            </button>
+            <button
+              type="submit"
+              disabled={!draft.trim()}
+              className="h-10 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-40"
+            >
+              Add
+            </button>
+          </form>
+          {voiceError && (
+            <p className="mt-2 text-[11px] text-destructive">{voiceError}</p>
+          )}
+
+          {custom.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {custom.map((item) => (
+                <li key={item.id} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCustom((c) => c.map((x) => x.id === item.id ? { ...x, done: !x.done } : x))}
+                    className={
+                      "group flex flex-1 items-start gap-3 rounded-xl border p-3 text-left transition " +
+                      (item.done
+                        ? "border-primary/40 bg-primary/5"
+                        : "border-border bg-background active:bg-accent/30")
+                    }
+                  >
+                    <span
+                      aria-hidden
+                      className={
+                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border " +
+                        (item.done
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card text-transparent")
+                      }
+                    >
+                      ✓
+                    </span>
+                    <span
+                      className={
+                        "min-w-0 flex-1 text-sm font-medium leading-snug " +
+                        (item.done ? "text-muted-foreground line-through" : "text-foreground")
+                      }
+                    >
+                      {item.title}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCustom((c) => c.filter((x) => x.id !== item.id))}
+                    aria-label="Delete to-do"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <NudgeCard subtype={stored.result.subtype} />
