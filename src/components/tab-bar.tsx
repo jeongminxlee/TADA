@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, CheckCircle2, Calendar, Gauge, MoreHorizontal } from "lucide-react";
-import { Leaf } from "./leaf";
+
 
 type Tab = {
   to: "/" | "/tasks" | "/calendar" | "/mood" | "/more";
@@ -43,12 +43,6 @@ export function TabBar() {
                 }
                 aria-current={active ? "page" : undefined}
               >
-                {active && (
-                  <Leaf
-                    aria-hidden
-                    className="absolute left-1/2 top-1.5 h-2.5 w-2.5 -translate-x-1/2 -rotate-12 text-primary"
-                  />
-                )}
                 <span aria-hidden>{t.icon}</span>
                 <span>{t.label}</span>
               </Link>
