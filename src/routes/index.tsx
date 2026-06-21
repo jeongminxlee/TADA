@@ -1,192 +1,211 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
-  MOOD_LABELS,
   TASKS,
-  MED_TASK,
   adaptiveTask,
   loadCheckIns,
   todayISO,
-  useCheckIns,
   useOnboardingResult,
 } from "@/lib/adhd-shared";
 import { suggestNudge } from "@/lib/nudge.functions";
+import { chatReply } from "@/lib/chat.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Steady — Home" },
-      { name: "description", content: "Today at a glance: your mood, adaptive next step, and AI nudge." },
+      { title: "Steady — Ask anything" },
+      { name: "description", content: "Ask Steady, your non-diagnostic ADHD coach. Tips and pointers to the right in-app tool." },
     ],
   }),
   component: HomeRoute,
 });
 
+type Msg = { role: "user" | "assistant"; content: string };
+
 function HomeRoute() {
   const stored = useOnboardingResult();
-  const [history] = useCheckIns();
-  const today = history.find((c) => c.date === todayISO()) ?? null;
-
-  // Streak: consecutive days ending today with a check-in.
-  const streak = useMemo(() => {
-    const set = new Set(history.map((c) => c.date));
-    let n = 0;
-    const d = new Date();
-    while (set.has(d.toISOString().slice(0, 10))) {
-      n += 1;
-      d.setDate(d.getDate() - 1);
-    }
-    return n;
-  }, [history]);
-
-  const hour = new Date().getHours();
-  const greeting = hour < 5 ? "Still up?" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const dateLabel = new Date().toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-
   const subtype = stored?.result.subtype ?? "Take the screener";
   const planKey = stored?.result.key ?? "below";
-  const adaptive = adaptiveTask(today);
-  const nextTask = adaptive?.task ?? TASKS[planKey].tasks[0];
+
+  const ask = useServerFn(chatReply);
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, busy]);
+
+  async function onSubmit(e?: React.FormEvent, override?: string) {
+    e?.preventDefault();
+    const text = (override ?? input).trim();
+    if (!text || busy) return;
+    const next = [...messages, { role: "user" as const, content: text }];
+    setMessages(next);
+    setInput("");
+    setBusy(true);
+    setError(null);
+    try {
+      const { reply } = await ask({
+        data: { messages: next.slice(-20), subtype: stored?.result.subtype },
+      });
+      setMessages((m) => [...m, { role: "assistant", content: reply }]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      setError(msg);
+    } finally {
+      setBusy(false);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }
+
+  const empty = messages.length === 0;
 
   return (
     <AppShell
-      title={greeting}
-      subtitle={dateLabel}
+      title="Steady"
+      subtitle="Ask anything — tips, not diagnosis"
       right={
-        <Link
-          to="/onboarding"
-          className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-medium text-secondary-foreground"
-        >
-          {streak > 0 ? `${streak}d streak` : "Start"}
-        </Link>
+        !empty ? (
+          <button
+            type="button"
+            onClick={() => setMessages([])}
+            className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-medium text-secondary-foreground"
+          >
+            New
+          </button>
+        ) : undefined
       }
     >
-      <div className="space-y-4">
-        {stored && (
-          <Link
-            to="/more"
-            className="block rounded-2xl border border-border bg-card p-4 transition active:scale-[0.99]"
-          >
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
-              Your presentation
+      {empty ? (
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 pb-32">
+          <div className="text-center">
+            <h2 className="text-3xl font-semibold tracking-tight">
+              <span className="text-primary">St</span>
+              <span className="text-foreground">ea</span>
+              <span className="text-primary">dy</span>
+            </h2>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Ask a question or describe what's on your plate.
             </p>
-            <p className="mt-1 text-sm font-semibold">{subtype}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Tap to read what this means and your NHS next steps.
-            </p>
-          </Link>
-        )}
+          </div>
 
-        <MoodSnapshot today={today} />
+          <form onSubmit={onSubmit} className="w-full">
+            <div className="flex items-end gap-2 rounded-3xl border border-border bg-card px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    onSubmit();
+                  }
+                }}
+                rows={1}
+                placeholder="Ask Steady…"
+                className="min-h-[40px] max-h-32 flex-1 resize-none bg-transparent py-2 text-sm outline-none"
+                disabled={busy}
+              />
+              <button
+                type="submit"
+                disabled={busy || !input.trim()}
+                className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-primary px-4 text-xs font-medium text-primary-foreground disabled:opacity-50"
+              >
+                Ask
+              </button>
+            </div>
+          </form>
 
-        <NextStepCard
-          title={nextTask.title}
-          why={nextTask.why}
-          adapted={!!adaptive}
-          reason={adaptive?.reason}
-        />
+          <QuickNudge subtype={subtype} planKey={planKey} />
 
-        <QuickNudge subtype={subtype} hasCheckIn={!!today} planKey={planKey} />
-
-        <div className="grid grid-cols-2 gap-3">
-          <Link
-            to="/tasks"
-            className="rounded-2xl border border-border bg-card p-4 transition active:scale-[0.99]"
-          >
-            <p className="text-[11px] font-medium uppercase tracking-wider text-primary">Today's plan</p>
-            <p className="mt-1 text-sm font-medium">Open tasks →</p>
-          </Link>
-          <Link
-            to="/calendar"
-            className="rounded-2xl border border-border bg-card p-4 transition active:scale-[0.99]"
-          >
-            <p className="text-[11px] font-medium uppercase tracking-wider text-primary">History</p>
-            <p className="mt-1 text-sm font-medium">Calendar →</p>
-          </Link>
+          {error && (
+            <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{error}</p>
+          )}
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col gap-3 pb-40">
+          <ul className="space-y-2" aria-live="polite">
+            {messages.map((m, i) => (
+              <li key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                <div
+                  className={
+                    "max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm leading-relaxed " +
+                    (m.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-foreground border border-border")
+                  }
+                >
+                  {renderAssistant(m.content)}
+                </div>
+              </li>
+            ))}
+            {busy && (
+              <li className="flex justify-start">
+                <div className="rounded-2xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+                  Thinking…
+                </div>
+              </li>
+            )}
+          </ul>
+          {error && (
+            <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{error}</p>
+          )}
+          <div ref={endRef} />
+
+          <form
+            onSubmit={onSubmit}
+            className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-background/95 px-4 py-3 backdrop-blur"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+          >
+            <div className="mx-auto flex max-w-md items-end gap-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    onSubmit();
+                  }
+                }}
+                rows={1}
+                placeholder="Ask a follow-up…"
+                className="min-h-[44px] max-h-32 flex-1 resize-none rounded-2xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                disabled={busy}
+              />
+              <button
+                type="submit"
+                disabled={busy || !input.trim()}
+                className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+              >
+                Send
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </AppShell>
   );
 }
 
-function MoodSnapshot({ today }: { today: { mood: number } | null }) {
-  if (!today) {
-    return (
-      <Link
-        to="/mood"
-        className="block rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 text-center transition active:scale-[0.99]"
-      >
-        <p className="text-xs font-medium uppercase tracking-wider text-primary">
-          Today's check-in
-        </p>
-        <p className="mt-1 text-base font-semibold">Log your mood</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          The app adapts your next step from how you feel right now.
-        </p>
-      </Link>
-    );
-  }
-  const emojis = ["😞", "🙁", "😐", "🙂", "😄"];
-  return (
-    <Link
-      to="/mood"
-      className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition active:scale-[0.99]"
-    >
-      <span className="text-3xl leading-none" aria-hidden>
-        {emojis[today.mood - 1]}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
-          Today's mood
-        </p>
-        <p className="truncate text-sm font-semibold">{MOOD_LABELS[today.mood - 1]}</p>
-      </div>
-      <span className="text-xs text-muted-foreground">Edit →</span>
-    </Link>
-  );
-}
-
-function NextStepCard({
-  title,
-  why,
-  adapted,
-  reason,
-}: {
-  title: string;
-  why: string;
-  adapted: boolean;
-  reason?: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
-          Next small step
-        </p>
-        {adapted && (
-          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">
-            Adapted
-          </span>
-        )}
-      </div>
-      {adapted && reason && (
-        <p className="mt-1 text-xs text-muted-foreground">{reason}</p>
-      )}
-      <p className="mt-2 text-base font-semibold leading-snug">{title}</p>
-      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{why}</p>
-      <Link
-        to="/tasks"
-        className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground transition active:opacity-90"
-      >
-        Open today's plan
-      </Link>
-    </div>
+function renderAssistant(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) =>
+    p.startsWith("**") && p.endsWith("**") ? (
+      <strong key={i}>{p.slice(2, -2)}</strong>
+    ) : (
+      <span key={i}>{p}</span>
+    ),
   );
 }
 
@@ -199,11 +218,9 @@ type Nudge = {
 
 function QuickNudge({
   subtype,
-  hasCheckIn,
   planKey,
 }: {
   subtype: string;
-  hasCheckIn: boolean;
   planKey: keyof typeof TASKS;
 }) {
   const ask = useServerFn(suggestNudge);
@@ -266,16 +283,11 @@ function QuickNudge({
   }
 
   return (
-    <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-4">
+    <div className="w-full rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-4">
       <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
         AI nudge
       </p>
       <p className="mt-1 text-sm font-semibold">What's the next small thing?</p>
-      {!hasCheckIn && (
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Tip: log your mood first — the nudge adapts to it.
-        </p>
-      )}
       {nudge && (
         <div className="mt-3 space-y-2 rounded-xl bg-background/60 p-3 text-sm">
           <div className="flex items-center justify-between gap-2">
