@@ -254,63 +254,99 @@ function TasksRoute() {
           )}
 
           <p className="mt-3 text-[11px] text-muted-foreground">
-            Tip: ask TADA on the <Link to="/" className="underline">home tab</Link> — "add task email Sam" — and it lands here automatically.
+            Tip: ask TADA on the <Link to="/" className="underline">home tab</Link> — "add task email Sam" — and it lands on today's plan automatically.
           </p>
+        </section>
 
-          {custom.length > 0 && (
-            <ul className="mt-4 space-y-2">
+        <DayCalendar tasks={custom} onToggle={toggleCustomTask} />
+
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
+                Today's plan
+              </p>
+              <p className="mt-0.5 truncate text-sm font-semibold">{basePlan.headline}</p>
+            </div>
+            <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-secondary-foreground">
+              {completed}/{planTasks.length}
+            </span>
+          </div>
+
+          {adaptive ? (
+            <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-primary">
+                Adapting to today's check-in
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed">{adaptive.reason}</p>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-muted-foreground">
+              <Link to="/mood" className="underline">Log today's mood</Link> and the plan adapts to how you feel.
+            </p>
+          )}
+
+          <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Your to-dos
+          </p>
+          {custom.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Nothing scheduled yet — add one above and it'll be time-blocked for you.
+            </p>
+          ) : (
+            <ul className="mt-2 space-y-2">
               {custom
                 .slice()
                 .sort((a, b) => (a.startMin ?? 0) - (b.startMin ?? 0))
                 .map((item) => (
-                <li key={item.id} className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleCustomTask(item.id)}
-                    className={
-                      "group flex flex-1 items-start gap-3 rounded-xl border p-3 text-left transition " +
-                      (item.done
-                        ? "border-primary/40 bg-primary/5"
-                        : "border-border bg-background active:bg-accent/30")
-                    }
-                  >
-                    <span
-                      aria-hidden
+                  <li key={item.id} className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleCustomTask(item.id)}
                       className={
-                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border " +
+                        "group flex flex-1 items-start gap-3 rounded-xl border p-3 text-left transition " +
                         (item.done
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-transparent")
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border bg-background active:bg-accent/30")
                       }
                     >
-                      ✓
-                    </span>
-                    <span className="min-w-0 flex-1">
                       <span
+                        aria-hidden
                         className={
-                          "block text-sm font-medium leading-snug " +
-                          (item.done ? "text-muted-foreground line-through" : "text-foreground")
+                          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border " +
+                          (item.done
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-transparent")
                         }
                       >
-                        {item.title}
+                        ✓
                       </span>
-                      {typeof item.startMin === "number" && typeof item.durationMin === "number" && (
-                        <span className="mt-1 block text-[11px] text-muted-foreground">
-                          {fmtTime(item.startMin)} – {fmtTime(item.startMin + item.durationMin)} · {fmtDuration(item.durationMin)}
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className={
+                            "block text-sm font-medium leading-snug " +
+                            (item.done ? "text-muted-foreground line-through" : "text-foreground")
+                          }
+                        >
+                          {item.title}
                         </span>
-                      )}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCustom((c) => c.filter((x) => x.id !== item.id))}
-                    aria-label="Delete to-do"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/40 hover:text-foreground"
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
+                        {typeof item.startMin === "number" && typeof item.durationMin === "number" && (
+                          <span className="mt-1 block text-[11px] text-muted-foreground">
+                            {fmtTime(item.startMin)} – {fmtTime(item.startMin + item.durationMin)} · {fmtDuration(item.durationMin)}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCustom((c) => c.filter((x) => x.id !== item.id))}
+                      aria-label="Delete to-do"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
             </ul>
           )}
         </section>
