@@ -6,12 +6,11 @@ import { AppShell } from "@/components/app-shell";
 
 import {
   TASKS,
-  adaptiveTask,
+  NudgeCard,
   loadCheckIns,
   todayISO,
   useOnboardingResult,
 } from "@/lib/adhd-shared";
-import { suggestNudge } from "@/lib/nudge.functions";
 import { chatReply } from "@/lib/chat.functions";
 import {
   parseAddTaskIntent,
