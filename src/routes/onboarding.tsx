@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import onboardingCalm from "@/assets/onboarding-calm.jpg";
 import {
   ASRS,
   COUNT_THRESHOLD,
