@@ -10,7 +10,7 @@ import {
 export const Route = createFileRoute("/calendar")({
   head: () => ({
     meta: [
-      { title: "Steady — Calendar" },
+      { title: "TADA AI — Calendar" },
       { name: "description", content: "Month view of your mood check-ins and notes." },
     ],
   }),

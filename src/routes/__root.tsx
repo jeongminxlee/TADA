@@ -82,10 +82,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Steady — ADHD self-management (UK)" },
+      { title: "TADA AI — ADHD self-management (UK)" },
       { name: "description", content: "Mobile app for adults with ADHD in the UK: WHO ASRS screener, daily mood tracking, adaptive tasks, AI coach, and NHS signposting (NICE NG87)." },
       { name: "theme-color", content: "#005eb8" },
-      { property: "og:title", content: "Steady — ADHD self-management (UK)" },
+      { property: "og:title", content: "TADA AI — ADHD self-management (UK)" },
       { property: "og:description", content: "ASRS screener, mood tracking, adaptive tasks, AI coach, NHS signposting." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
