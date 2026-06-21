@@ -1,17 +1,18 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { Home, CheckCircle2, Calendar, Gauge, MoreHorizontal } from "lucide-react";
 
 type Tab = {
   to: "/" | "/tasks" | "/calendar" | "/mood" | "/more";
   label: string;
-  icon: string;
+  icon: React.ReactNode;
 };
 
 const TABS: Tab[] = [
-  { to: "/", label: "Home", icon: "🏠" },
-  { to: "/tasks", label: "Tasks", icon: "✓" },
-  { to: "/calendar", label: "Calendar", icon: "📅" },
-  { to: "/mood", label: "Mood", icon: "◐" },
-  { to: "/more", label: "Content", icon: "⋯" },
+  { to: "/", label: "Home", icon: <Home size={20} strokeWidth={2.5} /> },
+  { to: "/tasks", label: "Tasks", icon: <CheckCircle2 size={20} strokeWidth={2.5} /> },
+  { to: "/calendar", label: "Calendar", icon: <Calendar size={20} strokeWidth={2.5} /> },
+  { to: "/mood", label: "Mood", icon: <Gauge size={20} strokeWidth={2.5} /> },
+  { to: "/more", label: "Content", icon: <MoreHorizontal size={20} strokeWidth={2.5} /> },
 ];
 
 export function TabBar() {
