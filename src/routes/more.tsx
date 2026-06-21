@@ -30,12 +30,18 @@ function MoreRoute() {
     ? MED_OPTIONS.find((m) => m.value === stored.onboarding.meds)?.label
     : null;
 
+  const tabMeta: Record<"learn" | "nhs" | "settings", { label: string; icon: string }> = {
+    learn: { label: "Learn", icon: "✦" },
+    nhs: { label: "NHS", icon: "✚" },
+    settings: { label: "Settings", icon: "⚙" },
+  };
+
   return (
     <AppShell title="Content" subtitle="Learn, NHS, settings">
       <div
         role="tablist"
         aria-label="More sections"
-        className="mb-4 inline-flex w-full rounded-full bg-secondary p-1 text-xs font-medium"
+        className="mb-5 inline-flex w-full rounded-full border border-border/60 bg-secondary/70 p-1 text-xs font-medium shadow-sm backdrop-blur"
       >
         {(["learn", "nhs", "settings"] as const).map((s) => {
           const active = section === s;
@@ -47,20 +53,27 @@ function MoreRoute() {
               type="button"
               onClick={() => setSection(s)}
               className={
-                "flex-1 rounded-full px-3 py-1.5 capitalize transition " +
+                "flex-1 rounded-full px-3 py-2 capitalize transition-all duration-300 ease-out " +
                 (active
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground")
+                  ? "bg-background text-foreground shadow-sm ring-1 ring-primary/15"
+                  : "text-muted-foreground hover:text-foreground")
               }
             >
-              {s === "nhs" ? "NHS" : s}
+              <span className="mr-1.5 text-primary/70">{tabMeta[s].icon}</span>
+              {tabMeta[s].label}
             </button>
           );
         })}
       </div>
 
       {section === "learn" && (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <header className="px-1">
+            <h2 className="text-lg font-semibold tracking-tight">Understand your subtype</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Four ADHD presentations, written in plain English.
+            </p>
+          </header>
           {(["inattentive", "hyperactive", "combined", "below"] as const).map((k) => {
             const ed = PSYCHOED[k];
             const mine = k === subtypeKey;
@@ -68,60 +81,88 @@ function MoreRoute() {
               <article
                 key={k}
                 className={
-                  "rounded-2xl border p-4 " +
+                  "group relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md " +
                   (mine
-                    ? "border-primary/40 bg-primary/5"
-                    : "border-border bg-card")
+                    ? "border-primary/40 bg-gradient-to-br from-primary/10 via-card to-accent/5 shadow-sm"
+                    : "border-border bg-card hover:border-primary/30")
                 }
               >
+                {mine && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/15 blur-2xl"
+                  />
+                )}
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
+                  <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
                     {ed.title}
                   </p>
                   {mine && (
-                    <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary-foreground">
-                      You
+                    <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm">
+                      ✦ You
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-sm font-semibold">{ed.tagline}</p>
+                <p className="mt-2 text-base font-semibold leading-snug">{ed.tagline}</p>
                 {ed.body.map((p, i) => (
-                  <p key={i} className="mt-2 text-[13px] leading-relaxed text-foreground/90">{p}</p>
+                  <p key={i} className="mt-2.5 text-[13.5px] leading-relaxed text-foreground/85">{p}</p>
                 ))}
-                <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">{ed.refs}</p>
+                <p className="mt-3 border-t border-border/60 pt-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {ed.refs}
+                </p>
               </article>
             );
           })}
         </div>
       )}
 
-      {section === "nhs" && <NhsNextSteps partAPositive={stored?.result.partAPositive ?? false} />}
+      {section === "nhs" && (
+        <div className="space-y-4">
+          <header className="px-1">
+            <h2 className="text-lg font-semibold tracking-tight">Next steps with the NHS</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              How to take this forward with your GP.
+            </p>
+          </header>
+          <NhsNextSteps partAPositive={stored?.result.partAPositive ?? false} />
+        </div>
+      )}
 
       {section === "settings" && (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <header className="px-1">
+            <h2 className="text-lg font-semibold tracking-tight">Settings</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Reminders, screener and app data.
+            </p>
+          </header>
           <ReminderSettings />
 
           {stored ? (
-            <div className="rounded-2xl border border-border bg-card p-4 text-sm">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
+            <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-accent/10 p-5 text-sm shadow-sm">
+              <span aria-hidden className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-accent/20 blur-2xl" />
+              <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
                 Your screener result
               </p>
-              <p className="mt-1 font-semibold">{stored.result.subtype}</p>
+              <p className="mt-2 text-base font-semibold">{stored.result.subtype}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Part A: {stored.result.partAShaded}/6 shaded · Age {stored.onboarding.age}
                 {medLabel ? ` · ${medLabel}` : ""}
               </p>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 text-sm">
-              You haven't taken the screener yet.
+            <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-5 text-sm">
+              <p className="font-medium">No screener result yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">Take the short questionnaire to personalise your experience.</p>
             </div>
           )}
 
           <button
             type="button"
             onClick={() => navigate({ to: "/onboarding" })}
-            className="inline-flex h-11 w-full items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground"
+            className="inline-flex h-11 w-full items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md active:scale-[0.99]"
           >
             {stored ? "Retake the screener" : "Start the screener"}
           </button>
@@ -135,26 +176,32 @@ function MoreRoute() {
                 navigate({ to: "/onboarding" });
               }
             }}
-            className="inline-flex h-11 w-full items-center justify-center rounded-full border border-destructive/40 text-sm font-medium text-destructive"
+            className="inline-flex h-11 w-full items-center justify-center rounded-full border border-destructive/40 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
           >
             Reset all app data
           </button>
 
-          <p className="pt-3 text-[11px] leading-relaxed text-muted-foreground">
-            For educational use only and not a substitute for NHS clinical
-            assessment. If you're in distress, call NHS 111 (or 999 in an
-            emergency). For mental health support, contact the Samaritans on 116 123.
-          </p>
+          <div className="mt-2 rounded-2xl border border-border/70 bg-muted/40 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Safety</p>
+            <p className="mt-2 text-[12px] leading-relaxed text-foreground/80">
+              For educational use only and not a substitute for NHS clinical
+              assessment. If you're in distress, call NHS 111 (or 999 in an
+              emergency). For mental health support, contact the Samaritans on 116 123.
+            </p>
+          </div>
 
-          <p className="pt-3 text-[11px] leading-relaxed text-muted-foreground">
-            Scoring uses the WHO Adult ADHD Self-Report Scale (ASRS v1.1, Kessler
-            et al., 2005) and DSM-5 age-adjusted symptom counts. Self-management
-            content is drawn from CBT for adult ADHD (Safren et al., 2005/2010),
-            Barkley (2012), and NICE NG87.
-          </p>
+          <div className="rounded-2xl border border-border/70 bg-muted/40 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Sources</p>
+            <p className="mt-2 text-[12px] leading-relaxed text-foreground/80">
+              Scoring uses the WHO Adult ADHD Self-Report Scale (ASRS v1.1, Kessler
+              et al., 2005) and DSM-5 age-adjusted symptom counts. Self-management
+              content is drawn from CBT for adult ADHD (Safren et al., 2005/2010),
+              Barkley (2012), and NICE NG87.
+            </p>
+          </div>
 
-          <p className="pt-3 text-center text-[11px] text-muted-foreground">
-            <Link to="/onboarding" className="underline">View intro</Link>
+          <p className="pt-2 text-center text-[11px] text-muted-foreground">
+            <Link to="/onboarding" className="underline underline-offset-2 hover:text-primary">View intro</Link>
           </p>
         </div>
       )}
