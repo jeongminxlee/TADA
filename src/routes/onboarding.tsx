@@ -11,7 +11,6 @@ import {
   TopBar,
   QuestionCard,
   NavBar,
-  ScoreCard,
   PSYCHOED,
   ageThreshold,
   saveOnboardingResult,
