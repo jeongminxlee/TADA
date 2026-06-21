@@ -14,6 +14,7 @@ import {
   PSYCHOED,
   ageThreshold,
   saveOnboardingResult,
+  seedDemoData,
   type Answers,
   type OnboardingData,
   type ResultPayload,
