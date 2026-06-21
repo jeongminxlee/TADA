@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import {
   PSYCHOED,
   MED_OPTIONS,
+  MEDICAL_DECODED,
   NhsNextSteps,
   clearOnboarding,
   useOnboardingResult,
