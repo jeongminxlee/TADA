@@ -13,7 +13,7 @@ import { useReminderSettings, ensurePermission, notify } from "@/lib/reminders";
 export const Route = createFileRoute("/more")({
   head: () => ({
     meta: [
-      { title: "Steady — Content" },
+      { title: "TADA AI — Content" },
       { name: "description", content: "Psychoeducation by ADHD subtype, NHS next steps, and app settings." },
     ],
   }),
@@ -249,7 +249,7 @@ function ReminderSettings() {
       <button
         type="button"
         disabled={!supported || perm !== "granted"}
-        onClick={() => notify("Steady — test reminder", "Reminders are working.")}
+        onClick={() => notify("TADA AI — test reminder", "Reminders are working.")}
         className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-full border border-border text-xs font-medium disabled:opacity-50"
       >
         Send a test notification

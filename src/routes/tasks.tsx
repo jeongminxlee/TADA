@@ -15,7 +15,7 @@ import {
 export const Route = createFileRoute("/tasks")({
   head: () => ({
     meta: [
-      { title: "Steady — Tasks" },
+      { title: "TADA AI — Tasks" },
       { name: "description", content: "Your adaptive ADHD daily plan plus your own to-dos with an AI coach." },
     ],
   }),
