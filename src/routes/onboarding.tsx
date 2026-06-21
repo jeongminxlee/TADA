@@ -205,58 +205,69 @@ function OnboardingResult({
   onRetake: () => void;
 }) {
   const ed = PSYCHOED[result.key];
+  const headline = result.partAPositive
+    ? "Sounds like ADHD might really resonate with you"
+    : "A few things stood out — but no strong pattern";
+  const subhead = result.partAPositive
+    ? "Lots of your answers line up with what people with ADHD often experience. It's worth chatting with your GP if it's getting in the way of life."
+    : "Your answers don't strongly point to ADHD, but tracking how you feel can still be really useful.";
   return (
     <div className="space-y-6 py-8 animate-fade-up">
       <div
         className={
-          "rounded-3xl border p-5 shadow-sm " +
+          "overflow-hidden rounded-3xl border shadow-sm " +
           (result.partAPositive
             ? "border-primary/40 bg-primary/5"
             : "border-border bg-card")
         }
       >
-        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
-          ASRS v1.1 · Part A screener
-        </p>
-        <h2 className="mt-1 text-xl font-semibold">
-          {result.partAPositive
-            ? "Symptoms highly consistent with adult ADHD"
-            : "Below the Part A screening threshold"}
-        </h2>
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-3xl font-semibold">{result.partAShaded}</span>
-          <span className="text-sm text-muted-foreground">/ 6 shaded</span>
+        <img
+          src={ed.image}
+          alt={ed.imageAlt}
+          width={1024}
+          height={1024}
+          loading="lazy"
+          className="h-44 w-full object-cover"
+        />
+        <div className="p-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
+            Your check-in
+          </p>
+          <h2 className="mt-1 text-xl font-semibold leading-snug">{headline}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{subhead}</p>
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          The WHO-validated Part A screener (Kessler et al., 2005) flags scores
-          of 4 or more as warranting further assessment by a GP. This is not a
-          diagnosis.
-        </p>
       </div>
 
       <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
         <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
-          Your result
+          Sounds like you
         </p>
-        <h3 className="mt-1 text-2xl font-semibold tracking-tight">{result.subtype}</h3>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          {result.description}
-        </p>
-        <div className="mt-4 grid gap-3">
-          <ScoreCard label="Inattention" count={result.inattCount} met={result.inattMet} threshold={result.threshold} />
-          <ScoreCard label="Hyperactivity-Impulsivity" count={result.hyperCount} met={result.hyperMet} threshold={result.threshold} />
-        </div>
+        <h3 className="mt-1 text-2xl font-semibold tracking-tight">{ed.title}</h3>
+        <p className="mt-2 text-sm font-medium text-foreground/90">{ed.tagline}</p>
+        {ed.body.map((p, i) => (
+          <p key={i} className="mt-3 text-sm leading-relaxed text-muted-foreground">{p}</p>
+        ))}
       </div>
 
-      <div className="rounded-3xl border border-border bg-accent/30 p-5">
-        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
-          What this means · {ed.title}
-        </p>
-        <p className="mt-1 text-base font-medium">{ed.tagline}</p>
-        {ed.body.map((p, i) => (
-          <p key={i} className="mt-2 text-sm leading-relaxed text-foreground/90">{p}</p>
-        ))}
-        <p className="mt-3 text-[11px] uppercase tracking-wider text-muted-foreground">{ed.refs}</p>
+      <div className="overflow-hidden rounded-3xl border border-border bg-accent/30">
+        <img
+          src={onboardingCalm}
+          alt="A warm mug held in cosy hands"
+          width={1024}
+          height={1024}
+          loading="lazy"
+          className="h-40 w-full object-cover"
+        />
+        <div className="p-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">
+            What's next
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+            The app will use this to suggest small, doable things — gentle
+            reminders, mood check-ins and one tiny task at a time. Nothing
+            scary. You can change anything later.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -272,14 +283,14 @@ function OnboardingResult({
           onClick={onRetake}
           className="inline-flex h-11 w-full items-center justify-center rounded-full border border-border text-sm font-medium text-foreground transition hover:bg-accent/30"
         >
-          Retake the screener
+          Try the questions again
         </button>
       </div>
 
       <p className="pt-2 text-[11px] leading-relaxed text-muted-foreground">
-        For educational use only and not a substitute for NHS clinical
-        assessment. If you're in distress, call NHS 111 (or 999 in an
-        emergency). For mental health support, contact the Samaritans on 116 123.
+        This is just for reflection — it isn't a diagnosis. If you're
+        struggling, your GP is a great first stop. In a crisis, call 111
+        (or 999 in an emergency), or the Samaritans on 116 123.
       </p>
     </div>
   );
