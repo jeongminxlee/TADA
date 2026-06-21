@@ -73,6 +73,31 @@ function TasksRoute() {
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const recRef = useRef<any>(null);
 
+  // Points & rewards
+  const { points, award } = usePoints();
+  const PLAN_PTS = 10;
+  const CUSTOM_PTS = 5;
+
+  const togglePlanTask = (i: number) => {
+    setDone((d) => {
+      const next = { ...d, [i]: !d[i] };
+      const delta = next[i] ? PLAN_PTS : -PLAN_PTS;
+      award(delta, next[i] ? `+${PLAN_PTS} pts · nice work` : undefined);
+      return next;
+    });
+  };
+
+  const toggleCustomTask = (id: number) => {
+    setCustom((c) =>
+      c.map((x) => {
+        if (x.id !== id) return x;
+        const becomingDone = !x.done;
+        award(becomingDone ? CUSTOM_PTS : -CUSTOM_PTS, becomingDone ? `+${CUSTOM_PTS} pts` : undefined);
+        return { ...x, done: becomingDone };
+      }),
+    );
+  };
+
   const addCustom = (text: string) => {
     const t = text.trim();
     if (!t) return;
@@ -165,7 +190,7 @@ function TasksRoute() {
                 <li key={i}>
                   <button
                     type="button"
-                    onClick={() => setDone((d) => ({ ...d, [i]: !d[i] }))}
+                    onClick={() => togglePlanTask(i)}
                     className={
                       "group flex w-full items-start gap-3 rounded-xl border p-3 text-left transition " +
                       (checked
@@ -267,7 +292,7 @@ function TasksRoute() {
                 <li key={item.id} className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setCustom((c) => c.map((x) => x.id === item.id ? { ...x, done: !x.done } : x))}
+                    onClick={() => toggleCustomTask(item.id)}
                     className={
                       "group flex flex-1 items-start gap-3 rounded-xl border p-3 text-left transition " +
                       (item.done
@@ -310,6 +335,7 @@ function TasksRoute() {
         </section>
 
         <NudgeCard subtype={stored.result.subtype} />
+        <RewardsCard points={points} />
       </div>
     </AppShell>
   );
