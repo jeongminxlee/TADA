@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import {
   PSYCHOED,
@@ -29,6 +30,16 @@ function MoreRoute() {
   const [decodedFilter, setDecodedFilter] = useState<"All" | "Diagnosis" | "Brain" | "Symptoms" | "Treatment" | "Co-occurring">("All");
   const [openTerm, setOpenTerm] = useState<string | null>(null);
   const subtypeKey = stored?.result.key ?? "below";
+  const [openSubtypes, setOpenSubtypes] = useState<Set<string>>(new Set([subtypeKey]));
+
+  const toggleSubtype = (k: string) => {
+    setOpenSubtypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  };
 
   const medLabel = stored
     ? MED_OPTIONS.find((m) => m.value === stored.onboarding.meds)?.label
@@ -81,6 +92,7 @@ function MoreRoute() {
           {(["inattentive", "hyperactive", "combined", "below"] as const).map((k) => {
             const ed = PSYCHOED[k];
             const mine = k === subtypeKey;
+            const open = openSubtypes.has(k);
             return (
               <article
                 key={k}
@@ -91,57 +103,79 @@ function MoreRoute() {
                     : "border-border bg-card hover:border-primary/30")
                 }
               >
-                <div className="relative h-36 w-full overflow-hidden">
-                  <img
-                    src={ed.image}
-                    alt={ed.imageAlt}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                  <div className="absolute left-4 top-3 flex items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs font-medium shadow-sm backdrop-blur">
-                    <span className="text-base leading-none">{ed.emoji}</span>
-                    <span className="uppercase tracking-[0.12em] text-primary">{ed.title}</span>
+                <button
+                  type="button"
+                  onClick={() => toggleSubtype(k)}
+                  aria-expanded={open}
+                  className="block w-full text-left"
+                >
+                  <div className="relative h-36 w-full overflow-hidden">
+                    <img
+                      src={ed.image}
+                      alt={ed.imageAlt}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+                    <div className="absolute left-4 top-3 flex items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs font-medium shadow-sm backdrop-blur">
+                      <span className="text-base leading-none">{ed.emoji}</span>
+                      <span className="uppercase tracking-[0.12em] text-primary">{ed.title}</span>
+                    </div>
+                    {mine && (
+                      <span className="absolute right-3 top-3 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm">
+                        ✦ You
+                      </span>
+                    )}
                   </div>
-                  {mine && (
-                    <span className="absolute right-3 top-3 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm">
-                      ✦ You
-                    </span>
-                  )}
-                </div>
-                <div className="p-5">
-                  <p className="text-base font-semibold leading-snug">{ed.tagline}</p>
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-base font-semibold leading-snug">{ed.tagline}</p>
+                      <span
+                        aria-hidden
+                        className={
+                          "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-foreground transition-transform duration-200 " +
+                          (open ? "rotate-180" : "")
+                        }
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </div>
+                </button>
 
-                  <div className="mt-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      What it looks like
+                {open && (
+                  <div className="px-5 pb-5 pt-0">
+                    <div className="mt-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        What it looks like
+                      </p>
+                      <ul className="mt-2 space-y-1.5">
+                        {ed.looksLike.map((item, i) => (
+                          <li key={i} className="rounded-xl bg-secondary/60 px-3 py-2 text-[13px] leading-snug">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+                        What tends to help
+                      </p>
+                      <ul className="mt-2 space-y-1.5">
+                        {ed.helps.map((item, i) => (
+                          <li key={i} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-[13px] leading-snug">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <p className="mt-4 border-t border-border/60 pt-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                      {ed.refs}
                     </p>
-                    <ul className="mt-2 space-y-1.5">
-                      {ed.looksLike.map((item, i) => (
-                        <li key={i} className="rounded-xl bg-secondary/60 px-3 py-2 text-[13px] leading-snug">
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
                   </div>
-
-                  <div className="mt-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-                      What tends to help
-                    </p>
-                    <ul className="mt-2 space-y-1.5">
-                      {ed.helps.map((item, i) => (
-                        <li key={i} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-[13px] leading-snug">
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <p className="mt-4 border-t border-border/60 pt-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                    {ed.refs}
-                  </p>
-                </div>
+                )}
               </article>
             );
           })}
