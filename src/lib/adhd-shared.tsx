@@ -88,7 +88,7 @@ export const OnboardingSchema = z.object({
   age: z
     .number({ invalid_type_error: "Enter your age as a number" })
     .int("Enter a whole number")
-    .min(5, "Must be 5 or older")
+    .min(18, "Must be 18 or older")
     .max(120, "Enter a realistic age"),
   meds: z.enum(["none", "considering", "current", "former"]),
   otherMeds: z.enum(["yes", "no", "preferNot"]).optional(),
