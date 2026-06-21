@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { User, ChevronLeft, Pill, CalendarDays, Stethoscope, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { usePoints, RewardsCard } from "@/lib/points";
 import {
   MED_OPTIONS,
   clearOnboarding,
