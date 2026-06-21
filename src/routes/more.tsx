@@ -13,7 +13,7 @@ import { useReminderSettings, ensurePermission, notify } from "@/lib/reminders";
 export const Route = createFileRoute("/more")({
   head: () => ({
     meta: [
-      { title: "Steady — Learn & settings" },
+      { title: "Steady — Content" },
       { name: "description", content: "Psychoeducation by ADHD subtype, NHS next steps, and app settings." },
     ],
   }),
@@ -31,7 +31,7 @@ function MoreRoute() {
     : null;
 
   return (
-    <AppShell title="More" subtitle="Learn, NHS, settings">
+    <AppShell title="Content" subtitle="Learn, NHS, settings">
       <div
         role="tablist"
         aria-label="More sections"
