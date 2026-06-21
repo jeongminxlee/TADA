@@ -2278,6 +2278,88 @@ export function useOnboardingResult(): StoredOnboarding | null {
   return v;
 }
 
+// ---- Demo / presentation seed data ----
+
+export function seedDemoData() {
+  if (typeof window === "undefined") return;
+
+  const today = todayISO();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const twoDaysAgo = new Date(Date.now() - 172800000).toISOString().slice(0, 10);
+
+  // Onboarding: 28, currently medicated, combined presentation
+  const onboarding: OnboardingData = { age: 28, meds: "current", otherMeds: "no" };
+  const answers: Answers = {};
+  for (let i = 1; i <= 18; i++) answers[`Q${i}`] = 3;
+
+  const result: ResultPayload = {
+    inattCount: 9,
+    hyperCount: 9,
+    inattMet: true,
+    hyperMet: true,
+    subtype: "Combined Presentation",
+    description:
+      "You endorsed enough symptoms in both the inattentive and the hyperactive-impulsive domains to meet the DSM-5 symptom threshold for the Combined Presentation.",
+    key: "combined",
+    threshold: 5,
+    partAShaded: 6,
+    partAPositive: true,
+  };
+
+  saveOnboardingResult({ onboarding, result, answers, completedAt: new Date().toISOString() });
+
+  // Check-ins for the last few days
+  const checkins: CheckIn[] = [
+    {
+      date: twoDaysAgo,
+      mood: 3,
+      focus: 3,
+      energy: 4,
+      tags: ["calm", "motivated"],
+      note: "Steady day, got a lot done.",
+    },
+    {
+      date: yesterday,
+      mood: 2,
+      focus: 2,
+      energy: 2,
+      tags: ["tired", "low"],
+      note: "Rough night, everything felt harder.",
+    },
+    {
+      date: today,
+      mood: 4,
+      focus: 3,
+      energy: 3,
+      tags: ["motivated", "scattered"],
+      note: "Feeling productive but easily pulled away.",
+    },
+  ];
+  saveCheckIns(checkins);
+
+  // Custom to-dos for today
+  const customKey = `adhd-custom-tasks-${today}`;
+  localStorage.setItem(
+    customKey,
+    JSON.stringify([
+      { id: 1001, title: "Reply to Sarah's message", done: true },
+      { id: 1002, title: "Book dentist", done: false },
+      { id: 1003, title: "Pack gym bag", done: false },
+    ]),
+  );
+
+  // Plan task progress (today's key includes adaptive task because of "scattered" tag)
+  const adaptiveFp = "Write your next single acti";
+  const tasksKey = `adhd-tasks-combined-current-${adaptiveFp}-${today}`;
+  localStorage.setItem(tasksKey, JSON.stringify({ "0": true, "1": true }));
+
+  // Points & rewards
+  seedPoints(125, [50]);
+
+  window.dispatchEvent(new CustomEvent("adhd-checkins-changed"));
+  window.dispatchEvent(new CustomEvent("adhd-onboarding-changed"));
+}
+
 // Plain-English psychoeducation by ASRS-mapped subtype. Sourced from
 // NICE NG87, Safren CBT-ADHD modules, and Barkley (2012).
 export const PSYCHOED: Record<
