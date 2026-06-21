@@ -75,7 +75,7 @@ function HomeRoute() {
   return (
     <AppShell
       title="TADA"
-      subtitle="Ask anything — tips, not diagnosis"
+      
       right={
         <div className="flex items-center gap-2">
           <Link
