@@ -104,11 +104,11 @@ export function ReminderRunner() {
       const loggedToday = history.some((c) => c.date === today);
 
       if (hm === settings.moodTime && !wasFired("mood") && !loggedToday) {
-        notify("TADA AI — log your mood", "Quick 10-second mood check-in.");
+        notify("TADA — log your mood", "Quick 10-second mood check-in.");
         markFired("mood");
       }
       if (hm === settings.taskTime && !wasFired("task")) {
-        notify("TADA AI — your daily plan", "Open Tasks to see today's adaptive next step.");
+        notify("TADA — your daily plan", "Open Tasks to see today's adaptive next step.");
         markFired("task");
       }
     };

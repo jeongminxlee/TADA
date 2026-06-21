@@ -15,8 +15,8 @@ import { chatReply } from "@/lib/chat.functions";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TADA AI — Ask anything" },
-      { name: "description", content: "Ask TADA AI, your non-diagnostic ADHD coach. Tips and pointers to the right in-app tool." },
+      { title: "TADA — Ask anything" },
+      { name: "description", content: "Ask TADA, your non-diagnostic ADHD coach. Tips and pointers to the right in-app tool." },
     ],
   }),
   component: HomeRoute,
@@ -72,7 +72,7 @@ function HomeRoute() {
 
   return (
     <AppShell
-      title="TADA AI"
+      title="TADA"
       subtitle="Ask anything — tips, not diagnosis"
       right={
         !empty ? (
@@ -89,7 +89,7 @@ function HomeRoute() {
       {empty ? (
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 pb-32">
           <div className="text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">TADA AI</h2>
+            <h2 className="text-3xl font-semibold tracking-tight">TADA</h2>
             <p className="mt-2 text-xs text-muted-foreground">
               Ask a question or describe what's on your plate.
             </p>
@@ -108,7 +108,7 @@ function HomeRoute() {
                   }
                 }}
                 rows={1}
-                placeholder="Ask TADA AI…"
+                placeholder="Ask TADA…"
                 className="min-h-[40px] max-h-32 flex-1 resize-none bg-transparent py-2 text-sm outline-none"
                 disabled={busy}
               />

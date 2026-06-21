@@ -1,6 +1,6 @@
 {
-  "name": "TADA AI — ADHD self-management",
-  "short_name": "TADA AI",
+  "name": "TADA — ADHD self-management",
+  "short_name": "TADA",
   "description": "Daily mood tracking, adaptive tasks, AI coach, and NHS signposting for adults with ADHD in the UK.",
   "start_url": "/",
   "display": "standalone",

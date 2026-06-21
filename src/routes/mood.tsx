@@ -5,7 +5,7 @@ import { MoodCard, CheckInCard, MoodReminderBanner } from "@/lib/adhd-shared";
 export const Route = createFileRoute("/mood")({
   head: () => ({
     meta: [
-      { title: "TADA AI — Mood" },
+      { title: "TADA — Mood" },
       { name: "description", content: "Daily mood log with state tags and 7/30/90-day trends." },
     ],
   }),
