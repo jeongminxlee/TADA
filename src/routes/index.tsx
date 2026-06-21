@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import logoImg from "@/assets/tada-logo.png";
 import {
   TASKS,
   adaptiveTask,
@@ -89,7 +90,10 @@ function HomeRoute() {
       {empty ? (
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 pb-32">
           <div className="text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">TADA</h2>
+            <h2 className="flex items-center gap-3 text-3xl font-semibold tracking-tight">
+              <img src={logoImg} alt="" aria-hidden className="h-10 w-10" />
+              TADA
+            </h2>
             <p className="mt-2 text-xs text-muted-foreground">
               Ask a question or describe what's on your plate.
             </p>
