@@ -45,6 +45,12 @@ export function usePoints() {
   return { points, claimed, award };
 }
 
+export function seedPoints(points: number, claimed: number[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(POINTS_KEY, String(points));
+  localStorage.setItem(CLAIMED_KEY, JSON.stringify(claimed));
+}
+
 export function RewardsCard({ points }: { points: number }) {
   const next = REWARDS.find((r) => points < r.threshold);
   const prev = [...REWARDS].reverse().find((r) => points >= r.threshold);
