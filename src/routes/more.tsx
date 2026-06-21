@@ -5,6 +5,7 @@ import {
   PSYCHOED,
   MED_OPTIONS,
   MEDICAL_DECODED,
+  TASKS,
   NhsNextSteps,
   clearOnboarding,
   useOnboardingResult,
