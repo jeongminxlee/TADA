@@ -2,6 +2,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { suggestNudge, coachTask } from "@/lib/nudge.functions";
+import onboardingHero from "@/assets/onboarding-hero.jpg";
+import onboardingFocus from "@/assets/onboarding-focus.jpg";
+import onboardingMovement from "@/assets/onboarding-movement.jpg";
+import onboardingCalm from "@/assets/onboarding-calm.jpg";
 
 // WHO Adult ADHD Self-Report Scale (ASRS v1.1) — Kessler et al., 2005.
 // The 18-item adult-worded version of the DSM criteria. Items 1–6 form the
@@ -580,16 +584,24 @@ export function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
-        WHO ASRS v1.1 · adult ADHD screener · UK
+        A gentle check-in
       </p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-6xl">
         How does your brain run?
       </h1>
+      <div className="mt-6 overflow-hidden rounded-3xl border border-border shadow-sm">
+        <img
+          src={onboardingHero}
+          alt="A person sitting quietly by a sunny window with a cup of tea"
+          width={1024}
+          height={1024}
+          className="h-48 w-full object-cover sm:h-64"
+        />
+      </div>
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-        18 short questions, one at a time. No long forms, no scrolling walls
-        of text. Tap an answer or press <Kbd>1</Kbd>–<Kbd>5</Kbd> — you can
-        change anything later. Aligned with NICE guideline NG87. For
-        reflection — only a GP or NHS specialist can diagnose ADHD.
+        18 quick questions, one at a time. Tap the answer that feels closest —
+        there are no right or wrong ones, and you can change your mind. It
+        takes about 2 minutes and helps the app show you tips that fit you.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
@@ -605,9 +617,13 @@ export function Intro({ onStart }: { onStart: () => void }) {
       </div>
       <ul className="mt-10 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
         <Feature label="One question at a time" />
-        <Feature label="Undo anytime" />
-        <Feature label="Stays on your device" />
+        <Feature label="Change your answers anytime" />
+        <Feature label="Stays on your phone" />
       </ul>
+      <p className="mt-6 max-w-xl text-xs leading-relaxed text-muted-foreground">
+        This isn't a diagnosis — just a friendly way to reflect. Only a GP
+        or specialist can diagnose ADHD.
+      </p>
     </div>
   );
 }
@@ -2256,42 +2272,50 @@ export function useOnboardingResult(): StoredOnboarding | null {
 // NICE NG87, Safren CBT-ADHD modules, and Barkley (2012).
 export const PSYCHOED: Record<
   "inattentive" | "hyperactive" | "combined" | "below",
-  { title: string; tagline: string; body: string[]; refs: string }
+  { title: string; tagline: string; body: string[]; refs: string; image: string; imageAlt: string }
 > = {
   inattentive: {
-    title: "Predominantly Inattentive",
-    tagline: "Attention, working memory and follow-through carry most of the load.",
+    title: "The daydreamer brain",
+    tagline: "Focus, remembering and finishing things feel like the hardest bits.",
     body: [
-      "You're more likely to lose track of details, drift off mid-task, and forget commitments — not because you don't care, but because the brain's attention-control system is under-firing.",
-      "What helps: externalise everything (single inbox, written priorities), shorten the gap between intention and action (timers, body-doubling), and reduce decision load in the morning.",
+      "You probably lose your train of thought, forget what you walked into a room for, or drift off in the middle of a task. It isn't laziness — your brain just has a harder time holding on to what it's meant to be doing.",
+      "What tends to help: write everything down in one place, use a timer so you don't have to push yourself by willpower alone, and pick tomorrow's first task tonight so the morning is easy.",
     ],
-    refs: "Safren CBT-ADHD · Barkley 2012 · NICE NG87",
+    refs: "Friendly summary, not medical advice.",
+    image: onboardingFocus,
+    imageAlt: "Sticky notes and pens on a sunny desk",
   },
   hyperactive: {
-    title: "Predominantly Hyperactive-Impulsive",
-    tagline: "Restlessness and impulsivity show up more than inattention.",
+    title: "The always-on brain",
+    tagline: "Restlessness and acting on the spot show up more than zoning out.",
     body: [
-      "You're more likely to act before thinking, interrupt, fidget, or feel driven by an internal motor. Suppressing it usually backfires — channelling it works better.",
-      "What helps: daily movement, structured breaks, a 10-second pause before sending or saying yes, and protected wind-down time so sleep doesn't amplify impulsivity the next day.",
+      "You probably fidget a lot, blurt things out, or feel like there's an engine inside you that won't switch off. Trying to sit on it usually makes things worse — giving it somewhere to go works better.",
+      "What tends to help: move your body every day, take real breaks, count to ten before saying yes or hitting send, and protect your wind-down time so tomorrow starts calmer.",
     ],
-    refs: "CHADD · Barkley 2012 · NICE NG87",
+    refs: "Friendly summary, not medical advice.",
+    image: onboardingMovement,
+    imageAlt: "Trainers, a water bottle and a skipping rope by a doorway",
   },
   combined: {
-    title: "Combined Presentation",
-    tagline: "Both inattention and hyperactivity-impulsivity meet threshold.",
+    title: "A bit of both",
+    tagline: "Drifting off and feeling restless both show up for you.",
     body: [
-      "You get the attention-regulation challenges and the impulsivity/restlessness challenges. Plans need to support both — protect attention AND give the body an outlet.",
-      "What helps: move first, then plan; time-box work in 25/5 cycles; keep a 'parking lot' for stray thoughts; pause before commitments.",
+      "You get the tricky-to-focus side and the can't-sit-still side. The trick is to plan for both — give your brain something to look at, and your body something to do.",
+      "What tends to help: move first, then sit down to work; do 25 minutes on, 5 minutes off; keep a scrap of paper for the random thoughts that pop up; pause before saying yes to new things.",
     ],
-    refs: "Safren CBT-ADHD · Barkley 2012 · NICE NG87",
+    refs: "Friendly summary, not medical advice.",
+    image: onboardingHero,
+    imageAlt: "A calm sunlit moment by a window",
   },
   below: {
-    title: "Below the DSM-5 symptom threshold",
-    tagline: "Your responses don't meet the DSM-5 symptom count for ADHD.",
+    title: "Mostly steady",
+    tagline: "Your answers don't really point to an ADHD pattern.",
     body: [
-      "Symptoms can still affect day-to-day life even below threshold. Tracking mood and using the executive-function tools in this app may still help.",
-      "If symptoms cause distress or impairment, your GP can refer you for a full NHS assessment under NICE NG87.",
+      "That doesn't mean everything is easy — focus and energy still wobble for everyone. The tools in this app can still help you keep an eye on mood, energy and your to-do list.",
+      "If things are causing you stress day to day, your GP is a good first stop — they can talk it through and refer you if needed.",
     ],
-    refs: "NICE NG87",
+    refs: "Friendly summary, not medical advice.",
+    image: onboardingCalm,
+    imageAlt: "Hands holding a warm mug in a cosy blanket",
   },
 };
