@@ -77,15 +77,24 @@ function HomeRoute() {
       title="TADA"
       subtitle="Ask anything — tips, not diagnosis"
       right={
-        !empty ? (
-          <button
-            type="button"
-            onClick={() => setMessages([])}
-            className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-medium text-secondary-foreground"
+        <div className="flex items-center gap-2">
+          <Link
+            to="/profile"
+            aria-label="My profile"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:text-foreground"
           >
-            New
-          </button>
-        ) : undefined
+            <User className="h-4 w-4" aria-hidden />
+          </Link>
+          {!empty && (
+            <button
+              type="button"
+              onClick={() => setMessages([])}
+              className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-medium text-secondary-foreground"
+            >
+              New
+            </button>
+          )}
+        </div>
       }
     >
       {empty ? (
