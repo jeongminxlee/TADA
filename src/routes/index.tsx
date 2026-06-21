@@ -13,6 +13,16 @@ import {
 } from "@/lib/adhd-shared";
 import { suggestNudge } from "@/lib/nudge.functions";
 import { chatReply } from "@/lib/chat.functions";
+import {
+  parseAddTaskIntent,
+  estimateDurationMin,
+  nextFreeStartMin,
+  defaultStartMin,
+  fmtTime,
+  fmtDuration,
+  customTasksKey,
+  type ScheduledTask,
+} from "@/lib/task-schedule";
 
 export const Route = createFileRoute("/")({
   head: () => ({
