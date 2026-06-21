@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
+import { User } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import logoImg from "@/assets/tada-logo.png";
 import {
