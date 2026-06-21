@@ -25,6 +25,8 @@ function MoreRoute() {
   const stored = useOnboardingResult();
   const navigate = useNavigate();
   const [section, setSection] = useState<"learn" | "nhs" | "settings">("learn");
+  const [decodedFilter, setDecodedFilter] = useState<"All" | "Diagnosis" | "Brain" | "Symptoms" | "Treatment" | "Co-occurring">("All");
+  const [openTerm, setOpenTerm] = useState<string | null>(null);
   const subtypeKey = stored?.result.key ?? "below";
 
   const medLabel = stored
