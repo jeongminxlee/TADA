@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { User, ChevronLeft, Pill, CalendarDays, Stethoscope, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { usePoints, RewardsCard } from "@/lib/points";
 import {
   MED_OPTIONS,
   clearOnboarding,
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/profile")({
 
 function ProfileRoute() {
   const stored = useOnboardingResult();
+  const { points } = usePoints();
 
   const medLabel = stored
     ? MED_OPTIONS.find((m) => m.value === stored.onboarding.meds)?.label
@@ -122,6 +124,8 @@ function ProfileRoute() {
                 </div>
               )}
             </div>
+
+            <RewardsCard points={points} />
 
             {/* Actions */}
             <div className="space-y-2 pt-2">
