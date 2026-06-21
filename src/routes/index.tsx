@@ -35,7 +35,6 @@ type Msg = { role: "user" | "assistant"; content: string };
 function HomeRoute() {
   const stored = useOnboardingResult();
   const subtype = stored?.result.subtype ?? "Take the screener";
-  const planKey = stored?.result.key ?? "below";
 
   const ask = useServerFn(chatReply);
   const [messages, setMessages] = useState<Msg[]>([]);
