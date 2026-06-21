@@ -13,7 +13,6 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as MoodRouteImport } from './routes/mood'
-import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -37,11 +36,6 @@ const MoodRoute = MoodRouteImport.update({
   path: '/mood',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatRoute = ChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -56,7 +50,6 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
-  '/chat': typeof ChatRoute
   '/mood': typeof MoodRoute
   '/more': typeof MoreRoute
   '/onboarding': typeof OnboardingRoute
@@ -65,7 +58,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
-  '/chat': typeof ChatRoute
   '/mood': typeof MoodRoute
   '/more': typeof MoreRoute
   '/onboarding': typeof OnboardingRoute
@@ -75,7 +67,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
-  '/chat': typeof ChatRoute
   '/mood': typeof MoodRoute
   '/more': typeof MoreRoute
   '/onboarding': typeof OnboardingRoute
@@ -83,21 +74,13 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/calendar'
-    | '/chat'
-    | '/mood'
-    | '/more'
-    | '/onboarding'
-    | '/tasks'
+  fullPaths: '/' | '/calendar' | '/mood' | '/more' | '/onboarding' | '/tasks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/calendar' | '/chat' | '/mood' | '/more' | '/onboarding' | '/tasks'
+  to: '/' | '/calendar' | '/mood' | '/more' | '/onboarding' | '/tasks'
   id:
     | '__root__'
     | '/'
     | '/calendar'
-    | '/chat'
     | '/mood'
     | '/more'
     | '/onboarding'
@@ -107,7 +90,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalendarRoute: typeof CalendarRoute
-  ChatRoute: typeof ChatRoute
   MoodRoute: typeof MoodRoute
   MoreRoute: typeof MoreRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -144,13 +126,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MoodRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/calendar': {
       id: '/calendar'
       path: '/calendar'
@@ -171,7 +146,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
-  ChatRoute: ChatRoute,
   MoodRoute: MoodRoute,
   MoreRoute: MoreRoute,
   OnboardingRoute: OnboardingRoute,
