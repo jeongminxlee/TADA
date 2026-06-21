@@ -631,7 +631,7 @@ export function Intro({ onStart }: { onStart: () => void }) {
           onKeyDown={(e) => {
             if (e.key === "Enter") handleStart();
           }}
-          placeholder="18+"
+          placeholder="e.g. 23"
           aria-invalid={!!error}
           aria-describedby={error ? "intro-age-error" : "intro-age-help"}
           className="mt-2 h-12 w-full rounded-xl border border-border bg-card px-4 text-base outline-none ring-0 focus:border-primary"
