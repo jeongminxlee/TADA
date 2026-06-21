@@ -20,6 +20,7 @@ export const Route = createFileRoute("/profile")({
 
 function ProfileRoute() {
   const stored = useOnboardingResult();
+  const { points } = usePoints();
 
   const medLabel = stored
     ? MED_OPTIONS.find((m) => m.value === stored.onboarding.meds)?.label
