@@ -50,9 +50,10 @@ function TasksRoute() {
   const basePlan = TASKS[planKey];
   const medTask = MED_TASK[meds];
   const adaptive = adaptiveTask(today);
+  // "Today's plan" shows only actual, actionable tasks (not strategy tips).
+  // Strategy tips for the subtype now live on the Content tab.
   const planTasks: Task[] = [
     ...(adaptive ? [adaptive.task] : []),
-    ...basePlan.tasks,
     ...(medTask ? [medTask] : []),
   ];
 
