@@ -1,32 +1,34 @@
-## Pitch Deck Visuals — Plan
+## Competitive comparison grid v2
 
-Generate a **set of 6 brand-matched illustrations** in the same style as your TADA logo (warm green #83b404 + warm orange accents, soft rounded forms, friendly/care vibe). Delivered as downloadable PNGs you can drop into any pitch deck.
+Regenerate `/mnt/documents/tada-visuals/08-competitive-grid.png` as a 5-column comparison table in TADA brand style (warm leaf green #83b404, peachy-orange accents, cream background, flat editorial illustration, no photoreal, no faces).
 
-### The 6 visuals
+**Columns** (left to right):
+1. Feature (row labels)
+2. Finch
+3. Fabulous
+4. Inflow
+5. Tiimo
+6. TADA (highlighted column — green tint background, slightly larger)
 
-Each tied to a typical pitch-deck slide:
+**Rows**:
+- Personalisation
+- Tailored for ADHD
+- Tailored suggestions
+- Dynamic symptom management
 
-1. **The problem** — a tangled/scattered motif (overwhelmed mind, scattered tasks).
-2. **The solution** — a calm, organized motif (gentle hand guiding, sorted shapes).
-3. **How it works** — a 3-step path / journey motif.
-4. **AI coach** — a friendly speech-bubble + spark motif.
-5. **Community / care** — interconnected rounded figures.
-6. **Vision** — sunrise / growing plant motif suggesting growth.
+**Cell marks**:
+- Green checkmark ✓ = yes
+- Soft grey dash – = no/limited
 
-All in the same illustration style as the TADA logo: flat, rounded, warm green primary with peachy-orange accents, cream background, friendly and care-forward — not corporate, not cartoony.
+**Proposed mapping** (TADA is the only all-green row):
+- Finch: Personalisation ✓ · ADHD – · Tailored suggestions ✓ · Dynamic symptom – 
+- Fabulous: Personalisation – · ADHD – · Tailored suggestions ✓ · Dynamic symptom –
+- Inflow: Personalisation – · ADHD ✓ · Tailored suggestions – · Dynamic symptom –
+- Tiimo: Personalisation – · ADHD ✓ · Tailored suggestions – · Dynamic symptom –
+- TADA: all ✓
 
-### Output
+Header includes small product name labels (no logos — avoids trademark issues, keeps illustrative style). TADA column gets a subtle leaf-green highlight and a small leaf motif.
 
-- Saved to `/mnt/documents/tada-visuals/` as `01-problem.png` through `06-vision.png`.
-- Square format (1024×1024), transparent backgrounds so they sit cleanly on any slide.
-- Surfaced as artifacts in chat so you can preview and download each.
+Output: 1536×1024 PNG, premium quality, saved to `/mnt/documents/tada-visuals/08-competitive-grid-v2.png`. Verify dimensions and visually QA before delivering.
 
-### Process
-
-1. Generate all 6 in parallel using the image tool, with a shared style prompt to lock consistency.
-2. Quick visual QA — re-generate any that drift off-palette or off-style.
-3. Deliver the set.
-
-### Not included
-
-No pitch deck file itself, no app changes — purely the visual assets. If you later want them assembled into a deck, just say the word.
+Confirm the row mapping above is accurate before I generate.
