@@ -101,14 +101,11 @@ function HomeRoute() {
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 pb-32">
           <div className="text-center">
             <h2 className="flex items-center justify-center gap-3 text-3xl font-semibold tracking-tight">
-              <div className="relative h-12 w-12">
-                <img
-                  src="/tada-logo.png"
-                  alt=""
-                  className="h-12 w-12 object-contain drop-shadow-sm"
-                />
-                <Leaf className="absolute -bottom-1 -right-2 h-5 w-5 rotate-[25deg] text-accent" />
-              </div>
+              <img
+                src="/tada-logo.png"
+                alt=""
+                className="h-12 w-12 object-contain drop-shadow-sm"
+              />
               <span className="bg-gradient-to-br from-primary via-foreground to-accent bg-clip-text text-transparent">
                 TADA
               </span>
