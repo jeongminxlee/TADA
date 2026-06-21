@@ -29,7 +29,17 @@ function MoreRoute() {
   const [section, setSection] = useState<"learn" | "nhs" | "settings">("learn");
   const [decodedFilter, setDecodedFilter] = useState<"All" | "Diagnosis" | "Brain" | "Symptoms" | "Treatment" | "Co-occurring">("All");
   const [openTerm, setOpenTerm] = useState<string | null>(null);
+  const [openSubtypes, setOpenSubtypes] = useState<Set<string>>(new Set([subtypeKey]));
   const subtypeKey = stored?.result.key ?? "below";
+
+  const toggleSubtype = (k: string) => {
+    setOpenSubtypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  };
 
   const medLabel = stored
     ? MED_OPTIONS.find((m) => m.value === stored.onboarding.meds)?.label
