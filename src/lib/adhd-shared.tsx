@@ -581,7 +581,7 @@ export function BackgroundBlobs() {
   );
 }
 
-export function Intro({ onStart }: { onStart: () => void }) {
+export function Intro({ onStart, onSkip }: { onStart: () => void; onSkip?: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
@@ -604,15 +604,24 @@ export function Intro({ onStart }: { onStart: () => void }) {
         there are no right or wrong ones, and you can change your mind. It
         takes about 2 minutes and helps the app show you tips that fit you.
       </p>
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+      <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <button
           onClick={onStart}
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30"
+          className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30"
         >
           Let's go
           <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </button>
-        <span className="text-sm text-muted-foreground">
+        {onSkip && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="inline-flex items-center justify-center rounded-full border border-border px-5 py-3 text-sm font-medium text-muted-foreground transition hover:bg-accent/30 hover:text-foreground"
+          >
+            Try with demo data
+          </button>
+        )}
+        <span className="text-sm text-muted-foreground sm:ml-auto">
           About 2 minutes · no sign-up
         </span>
       </div>
