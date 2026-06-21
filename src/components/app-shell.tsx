@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Leaf } from "./leaf";
-import type { ReactNode } from "react";
 
 export function AppShell({
   title,
