@@ -2,6 +2,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { suggestNudge, coachTask } from "@/lib/nudge.functions";
+import { seedPoints } from "@/lib/points";
 import onboardingHero from "@/assets/onboarding-hero.jpg";
 import onboardingFocus from "@/assets/onboarding-focus.jpg";
 import onboardingMovement from "@/assets/onboarding-movement.jpg";
@@ -580,7 +581,7 @@ export function BackgroundBlobs() {
   );
 }
 
-export function Intro({ onStart }: { onStart: () => void }) {
+export function Intro({ onStart, onSkip }: { onStart: () => void; onSkip?: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
@@ -603,15 +604,24 @@ export function Intro({ onStart }: { onStart: () => void }) {
         there are no right or wrong ones, and you can change your mind. It
         takes about 2 minutes and helps the app show you tips that fit you.
       </p>
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+      <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <button
           onClick={onStart}
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30"
+          className="group inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] hover:shadow-primary/30"
         >
           Let's go
           <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </button>
-        <span className="text-sm text-muted-foreground">
+        {onSkip && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="inline-flex items-center justify-center rounded-full border border-border px-5 py-3 text-sm font-medium text-muted-foreground transition hover:bg-accent/30 hover:text-foreground"
+          >
+            Try with demo data
+          </button>
+        )}
+        <span className="text-sm text-muted-foreground sm:ml-auto">
           About 2 minutes · no sign-up
         </span>
       </div>
@@ -2266,6 +2276,88 @@ export function useOnboardingResult(): StoredOnboarding | null {
     };
   }, []);
   return v;
+}
+
+// ---- Demo / presentation seed data ----
+
+export function seedDemoData() {
+  if (typeof window === "undefined") return;
+
+  const today = todayISO();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const twoDaysAgo = new Date(Date.now() - 172800000).toISOString().slice(0, 10);
+
+  // Onboarding: 28, currently medicated, combined presentation
+  const onboarding: OnboardingData = { age: 28, meds: "current", otherMeds: "no" };
+  const answers: Answers = {};
+  for (let i = 1; i <= 18; i++) answers[`Q${i}`] = 3;
+
+  const result: ResultPayload = {
+    inattCount: 9,
+    hyperCount: 9,
+    inattMet: true,
+    hyperMet: true,
+    subtype: "Combined Presentation",
+    description:
+      "You endorsed enough symptoms in both the inattentive and the hyperactive-impulsive domains to meet the DSM-5 symptom threshold for the Combined Presentation.",
+    key: "combined",
+    threshold: 5,
+    partAShaded: 6,
+    partAPositive: true,
+  };
+
+  saveOnboardingResult({ onboarding, result, answers, completedAt: new Date().toISOString() });
+
+  // Check-ins for the last few days
+  const checkins: CheckIn[] = [
+    {
+      date: twoDaysAgo,
+      mood: 3,
+      focus: 3,
+      energy: 4,
+      tags: ["calm", "motivated"],
+      note: "Steady day, got a lot done.",
+    },
+    {
+      date: yesterday,
+      mood: 2,
+      focus: 2,
+      energy: 2,
+      tags: ["tired", "low"],
+      note: "Rough night, everything felt harder.",
+    },
+    {
+      date: today,
+      mood: 4,
+      focus: 3,
+      energy: 3,
+      tags: ["motivated", "scattered"],
+      note: "Feeling productive but easily pulled away.",
+    },
+  ];
+  saveCheckIns(checkins);
+
+  // Custom to-dos for today
+  const customKey = `adhd-custom-tasks-${today}`;
+  localStorage.setItem(
+    customKey,
+    JSON.stringify([
+      { id: 1001, title: "Reply to Sarah's message", done: true },
+      { id: 1002, title: "Book dentist", done: false },
+      { id: 1003, title: "Pack gym bag", done: false },
+    ]),
+  );
+
+  // Plan task progress (today's key includes adaptive task because of "scattered" tag)
+  const adaptiveFp = "Write your next single acti";
+  const tasksKey = `adhd-tasks-combined-current-${adaptiveFp}-${today}`;
+  localStorage.setItem(tasksKey, JSON.stringify({ "0": true, "1": true }));
+
+  // Points & rewards
+  seedPoints(125, [50]);
+
+  window.dispatchEvent(new CustomEvent("adhd-checkins-changed"));
+  window.dispatchEvent(new CustomEvent("adhd-onboarding-changed"));
 }
 
 // Plain-English psychoeducation by ASRS-mapped subtype. Sourced from

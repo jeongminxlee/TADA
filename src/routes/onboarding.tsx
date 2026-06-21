@@ -14,6 +14,7 @@ import {
   PSYCHOED,
   ageThreshold,
   saveOnboardingResult,
+  seedDemoData,
   type Answers,
   type OnboardingData,
   type ResultPayload,
@@ -133,6 +134,11 @@ function OnboardingRoute() {
     navigate({ to: "/", replace: true });
   }
 
+  function skipWithDemo() {
+    seedDemoData();
+    navigate({ to: "/", replace: true });
+  }
+
   return (
     <main className="relative min-h-[100dvh] overflow-hidden bg-background text-foreground">
       <BackgroundBlobs />
@@ -140,7 +146,7 @@ function OnboardingRoute() {
         className="relative mx-auto flex min-h-[100dvh] max-w-md flex-col px-5 pb-8 pt-6"
         style={{ paddingTop: "max(env(safe-area-inset-top), 1.5rem)" }}
       >
-        {phase === "intro" && <Intro onStart={() => setPhase("onboarding")} />}
+        {phase === "intro" && <Intro onStart={() => setPhase("onboarding")} onSkip={skipWithDemo} />}
 
         {phase === "onboarding" && (
           <OnboardingStep
