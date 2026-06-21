@@ -188,7 +188,8 @@ function HomeRoute() {
             </div>
           </form>
 
-          <QuickNudge subtype={subtype} planKey={planKey} />
+          <NudgeCard subtype={subtype} />
+
 
           {error && (
             <p className="rounded-lg bg-destructive/10 p-2 text-xs text-destructive">{error}</p>
