@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import {
   PSYCHOED,
   MED_OPTIONS,
+  MEDICAL_DECODED,
   NhsNextSteps,
   clearOnboarding,
   useOnboardingResult,
@@ -24,6 +25,8 @@ function MoreRoute() {
   const stored = useOnboardingResult();
   const navigate = useNavigate();
   const [section, setSection] = useState<"learn" | "nhs" | "settings">("learn");
+  const [decodedFilter, setDecodedFilter] = useState<"All" | "Diagnosis" | "Brain" | "Symptoms" | "Treatment" | "Co-occurring">("All");
+  const [openTerm, setOpenTerm] = useState<string | null>(null);
   const subtypeKey = stored?.result.key ?? "below";
 
   const medLabel = stored
@@ -141,6 +144,106 @@ function MoreRoute() {
               </article>
             );
           })}
+
+          <section className="pt-2">
+            <header className="px-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">Decoded</p>
+              <h2 className="mt-1 text-lg font-semibold tracking-tight">Medical terms, in plain English</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                The clinical language you'll hear from your GP, psychiatrist, or in the research — translated.
+              </p>
+            </header>
+
+            <div className="no-scrollbar mt-3 flex gap-1.5 overflow-x-auto pb-1">
+              {(["All", "Diagnosis", "Brain", "Symptoms", "Treatment", "Co-occurring"] as const).map((c) => {
+                const active = decodedFilter === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setDecodedFilter(c)}
+                    className={
+                      "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-medium transition " +
+                      (active
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground")
+                    }
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+
+            <ul className="mt-3 space-y-2.5">
+              {MEDICAL_DECODED.filter(
+                (d) => decodedFilter === "All" || d.category === decodedFilter,
+              ).map((d) => {
+                const open = openTerm === d.term;
+                return (
+                  <li
+                    key={d.term}
+                    className="overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/40 hover:shadow-sm"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenTerm(open ? null : d.term)}
+                      aria-expanded={open}
+                      className="flex w-full items-start gap-3 p-4 text-left"
+                    >
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-xl">
+                        {d.emoji}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+                            {d.category}
+                          </span>
+                        </span>
+                        <span className="mt-0.5 block text-sm font-semibold leading-snug">{d.term}</span>
+                        <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
+                          {d.shortDef}
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden
+                        className={
+                          "mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-secondary text-xs text-foreground transition-transform " +
+                          (open ? "rotate-45" : "")
+                        }
+                      >
+                        +
+                      </span>
+                    </button>
+
+                    {open && (
+                      <div className="border-t border-border/70 bg-gradient-to-b from-secondary/30 to-transparent px-4 pb-4 pt-3">
+                        <p className="text-[13px] leading-relaxed text-foreground/90">
+                          {d.inPlainEnglish}
+                        </p>
+                        <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                          In everyday life
+                        </p>
+                        <ul className="mt-1.5 space-y-1.5">
+                          {d.everyday.map((e, i) => (
+                            <li
+                              key={i}
+                              className="rounded-xl bg-background px-3 py-2 text-[12.5px] leading-snug shadow-sm"
+                            >
+                              {e}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-3 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                          Source · {d.source}
+                        </p>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         </div>
       )}
 

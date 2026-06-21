@@ -2464,3 +2464,176 @@ export const PSYCHOED: Record<
     imageAlt: "Hands holding a warm mug in a cosy blanket",
   },
 };
+
+// Plain-English translations of clinical/medical concepts you'll hear in
+// ADHD assessment and treatment. Each card: term → what it actually means →
+// what it looks like day to day → source.
+export type DecodedCard = {
+  term: string;
+  emoji: string;
+  category: "Diagnosis" | "Brain" | "Symptoms" | "Treatment" | "Co-occurring";
+  shortDef: string;
+  inPlainEnglish: string;
+  everyday: string[];
+  source: string;
+};
+
+export const MEDICAL_DECODED: DecodedCard[] = [
+  {
+    term: "DSM-5",
+    emoji: "📘",
+    category: "Diagnosis",
+    shortDef: "The diagnostic rulebook clinicians use.",
+    inPlainEnglish:
+      "A checklist of symptoms a psychiatrist matches you against. For adult ADHD they look for 5+ symptoms in inattention and/or hyperactivity-impulsivity, present before age 12, in 2+ settings (e.g. work and home).",
+    everyday: [
+      "It's why your GP asks about childhood school reports",
+      "It's why 'I'm only like this at work' usually isn't enough",
+    ],
+    source: "American Psychiatric Association, DSM-5-TR (2022)",
+  },
+  {
+    term: "ASRS v1.1",
+    emoji: "📝",
+    category: "Diagnosis",
+    shortDef: "The 6-question screener used worldwide.",
+    inPlainEnglish:
+      "A WHO-built questionnaire. 4+ shaded answers on Part A means an ADHD assessment is worth pursuing. It's a screen, not a diagnosis.",
+    everyday: [
+      "It's the quiz at the start of this app",
+      "A positive result = 'go talk to someone', not 'you have ADHD'",
+    ],
+    source: "Kessler et al., Psychological Medicine (2005)",
+  },
+  {
+    term: "Executive function",
+    emoji: "🎛️",
+    category: "Brain",
+    shortDef: "Your brain's control panel.",
+    inPlainEnglish:
+      "The skills that let you plan, start, switch, and finish things — plus hold info in mind while you do them. In ADHD this system runs about 30% behind your age, even when IQ is high.",
+    everyday: [
+      "Knowing you should start, but physically can't begin",
+      "Forgetting step 2 of a 3-step task you just heard",
+    ],
+    source: "Barkley, Executive Functions (2012)",
+  },
+  {
+    term: "Working memory",
+    emoji: "🧠",
+    category: "Brain",
+    shortDef: "Your mental sticky-note.",
+    inPlainEnglish:
+      "The 'hold this for a sec' part of memory. ADHD brains have a smaller sticky-note, so info falls off before you use it.",
+    everyday: [
+      "Walking into a room and forgetting why",
+      "Losing your sentence mid-way through speaking",
+    ],
+    source: "Martinussen et al., J. Am. Acad. Child Psychiatry (2005)",
+  },
+  {
+    term: "Dopamine dysregulation",
+    emoji: "⚡",
+    category: "Brain",
+    shortDef: "Your reward chemistry runs low.",
+    inPlainEnglish:
+      "Dopamine signals 'this matters, do it now'. ADHD brains release less of it for ordinary tasks, so boring-but-important things feel almost impossible until a deadline spikes urgency.",
+    everyday: [
+      "Can hyperfocus on a game for 6 hours, can't open one email",
+      "Last-minute panic suddenly unlocks the task",
+    ],
+    source: "Volkow et al., JAMA (2009)",
+  },
+  {
+    term: "Time blindness",
+    emoji: "⏳",
+    category: "Symptoms",
+    shortDef: "Time is either 'now' or 'not now'.",
+    inPlainEnglish:
+      "ADHD weakens the brain's internal clock. You sense the present sharply but future deadlines feel abstract until they're suddenly here.",
+    everyday: [
+      "Thinking '5 more minutes' that becomes 90",
+      "A deadline next week genuinely doesn't feel real",
+    ],
+    source: "Barkley, ADHD and the Nature of Self-Control (1997)",
+  },
+  {
+    term: "Rejection sensitive dysphoria (RSD)",
+    emoji: "💔",
+    category: "Symptoms",
+    shortDef: "Criticism lands like a physical blow.",
+    inPlainEnglish:
+      "Not in the DSM, but very common in ADHD. Perceived rejection or failure triggers a sudden, intense emotional spike that's hard to talk yourself out of.",
+    everyday: [
+      "One bit of feedback ruins your whole day",
+      "Avoiding things you'd be good at, just in case",
+    ],
+    source: "Dodson, Additude Magazine; Beheshti et al., BMC Psychiatry (2020)",
+  },
+  {
+    term: "Emotional dysregulation",
+    emoji: "🌊",
+    category: "Symptoms",
+    shortDef: "Big feelings, fast — hard to brake.",
+    inPlainEnglish:
+      "Same emotions as everyone else, but they arrive louder and take longer to settle. Now recognised as a core ADHD feature, not a personality flaw.",
+    everyday: [
+      "Going from fine → furious in seconds",
+      "Crying at a small setback, then feeling silly",
+    ],
+    source: "Shaw et al., Am. J. Psychiatry (2014)",
+  },
+  {
+    term: "Stimulant medication",
+    emoji: "💊",
+    category: "Treatment",
+    shortDef: "First-line meds: methylphenidate, lisdexamfetamine.",
+    inPlainEnglish:
+      "They raise dopamine and noradrenaline in the prefrontal cortex — the 'control panel' area. About 70-80% of adults respond. They work the day you take them; they don't build up.",
+    everyday: [
+      "Brand names: Concerta, Elvanse, Ritalin",
+      "Effects start in 30-60 min, fade after a few hours",
+    ],
+    source: "NICE NG87 (2018, updated 2019)",
+  },
+  {
+    term: "Non-stimulant medication",
+    emoji: "🌿",
+    category: "Treatment",
+    shortDef: "Atomoxetine, guanfacine — slower, smoother.",
+    inPlainEnglish:
+      "Used when stimulants don't suit you (e.g. anxiety, sleep, heart issues). They take 4-6 weeks to fully kick in and work 24/7 rather than in bursts.",
+    everyday: [
+      "Brand names: Strattera, Intuniv",
+      "Less 'switch on/off' feel than stimulants",
+    ],
+    source: "NICE NG87 (2018, updated 2019)",
+  },
+  {
+    term: "Titration",
+    emoji: "🎚️",
+    category: "Treatment",
+    shortDef: "Dialling your dose in.",
+    inPlainEnglish:
+      "Starting low and stepping the dose up every few weeks until benefits peak and side effects are tolerable. It's normal for this to take 2-3 months.",
+    everyday: [
+      "Your first dose probably isn't your final dose",
+      "Keeping a daily symptom note helps your prescriber",
+    ],
+    source: "NICE NG87 (2018, updated 2019)",
+  },
+  {
+    term: "Comorbidities",
+    emoji: "🧩",
+    category: "Co-occurring",
+    shortDef: "Conditions that often travel with ADHD.",
+    inPlainEnglish:
+      "Around 60-80% of adults with ADHD also meet criteria for at least one other condition — most commonly anxiety, depression, sleep problems, or autism. Treating ADHD often eases the others.",
+    everyday: [
+      "Years of 'just anxiety' treatment that didn't fully fit",
+      "Sleep that's been off since adolescence",
+    ],
+    source: "Katzman et al., BMC Psychiatry (2017)",
+  },
+];
+
