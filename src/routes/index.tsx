@@ -5,10 +5,7 @@ import { User } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 
 import {
-  TASKS,
   NudgeCard,
-  loadCheckIns,
-  todayISO,
   useOnboardingResult,
 } from "@/lib/adhd-shared";
 import { chatReply } from "@/lib/chat.functions";
