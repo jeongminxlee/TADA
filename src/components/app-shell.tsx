@@ -32,10 +32,7 @@ export function AppShell({
         <div className="mx-auto grid max-w-md grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-3">
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 truncate text-lg font-semibold tracking-tight">
-              <span className="relative inline-flex h-5 w-5 items-center justify-center">
-                <img src="/tada-logo.png" alt="" className="h-5 w-5 object-contain" />
-                <Leaf className="absolute -bottom-0.5 -right-1 h-2.5 w-2.5 rotate-[20deg] text-accent" />
-              </span>
+              <img src="/tada-logo.png" alt="" className="h-5 w-5 object-contain" />
               {title}
             </h1>
             {subtitle && (
