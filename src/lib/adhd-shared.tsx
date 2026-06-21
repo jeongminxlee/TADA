@@ -2,6 +2,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { suggestNudge, coachTask } from "@/lib/nudge.functions";
+import { seedPoints } from "@/lib/points";
 import onboardingHero from "@/assets/onboarding-hero.jpg";
 import onboardingFocus from "@/assets/onboarding-focus.jpg";
 import onboardingMovement from "@/assets/onboarding-movement.jpg";
