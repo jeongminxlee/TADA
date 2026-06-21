@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
@@ -198,6 +198,14 @@ function HomeRoute() {
   );
 }
 
+const TAB_LINKS: { match: RegExp; to: "/" | "/tasks" | "/calendar" | "/mood" | "/more"; label: string; icon: string }[] = [
+  { match: /\bmood\b/i, to: "/mood", label: "Open Mood", icon: "◐" },
+  { match: /\btasks?\b/i, to: "/tasks", label: "Open Tasks", icon: "✓" },
+  { match: /\bcalendar\b/i, to: "/calendar", label: "Open Calendar", icon: "📅" },
+  { match: /\bcontent\b|\bpsychoeducation\b|\bscreener\b|\bASRS\b|\breminder/i, to: "/more", label: "Open Content", icon: "⋯" },
+  { match: /\bhome\b|\bnudge\b|\bnext step\b/i, to: "/", label: "Go Home", icon: "🏠" },
+];
+
 function renderAssistant(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((p, i) =>
@@ -206,6 +214,43 @@ function renderAssistant(text: string) {
     ) : (
       <span key={i}>{p}</span>
     ),
+  );
+}
+
+function tabSuggestions(text: string) {
+  const seen = new Set<string>();
+  const hits: { to: "/" | "/tasks" | "/calendar" | "/mood" | "/more"; label: string; icon: string }[] = [];
+  for (const t of TAB_LINKS) {
+    if (t.match.test(text) && !seen.has(t.to)) {
+      seen.add(t.to);
+      hits.push({ to: t.to, label: t.label, icon: t.icon });
+    }
+  }
+  return hits;
+}
+
+function AssistantBubble({ content }: { content: string }) {
+  const suggestions = tabSuggestions(content);
+  return (
+    <div className="max-w-[85%] space-y-2">
+      <div className="whitespace-pre-wrap rounded-2xl border border-border bg-card px-3 py-2 text-sm leading-relaxed text-foreground">
+        {renderAssistant(content)}
+      </div>
+      {suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {suggestions.map((s) => (
+            <Link
+              key={s.to}
+              to={s.to}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary transition active:scale-95"
+            >
+              <span aria-hidden>{s.icon}</span>
+              <span>{s.label}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
