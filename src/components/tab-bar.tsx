@@ -1,10 +1,11 @@
+import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, CheckCircle2, Calendar, Gauge, MoreHorizontal } from "lucide-react";
 
 type Tab = {
   to: "/" | "/tasks" | "/calendar" | "/mood" | "/more";
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 };
 
 const TABS: Tab[] = [
