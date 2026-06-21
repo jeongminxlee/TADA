@@ -580,16 +580,24 @@ export function Intro({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-start justify-center py-12 animate-fade-up">
       <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
-        WHO ASRS v1.1 · adult ADHD screener · UK
+        A gentle check-in
       </p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-6xl">
         How does your brain run?
       </h1>
+      <div className="mt-6 overflow-hidden rounded-3xl border border-border shadow-sm">
+        <img
+          src={onboardingHero}
+          alt="A person sitting quietly by a sunny window with a cup of tea"
+          width={1024}
+          height={1024}
+          className="h-48 w-full object-cover sm:h-64"
+        />
+      </div>
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-        18 short questions, one at a time. No long forms, no scrolling walls
-        of text. Tap an answer or press <Kbd>1</Kbd>–<Kbd>5</Kbd> — you can
-        change anything later. Aligned with NICE guideline NG87. For
-        reflection — only a GP or NHS specialist can diagnose ADHD.
+        18 quick questions, one at a time. Tap the answer that feels closest —
+        there are no right or wrong ones, and you can change your mind. It
+        takes about 2 minutes and helps the app show you tips that fit you.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
@@ -605,9 +613,13 @@ export function Intro({ onStart }: { onStart: () => void }) {
       </div>
       <ul className="mt-10 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
         <Feature label="One question at a time" />
-        <Feature label="Undo anytime" />
-        <Feature label="Stays on your device" />
+        <Feature label="Change your answers anytime" />
+        <Feature label="Stays on your phone" />
       </ul>
+      <p className="mt-6 max-w-xl text-xs leading-relaxed text-muted-foreground">
+        This isn't a diagnosis — just a friendly way to reflect. Only a GP
+        or specialist can diagnose ADHD.
+      </p>
     </div>
   );
 }
