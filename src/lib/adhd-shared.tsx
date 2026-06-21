@@ -691,15 +691,18 @@ export function OnboardingStep({
             id="age"
             type="number"
             inputMode="numeric"
-            min={5}
+            min={18}
             max={120}
             value={ageInput}
             onChange={(e) => setAgeInput(e.target.value)}
-            placeholder="e.g. 28"
+            placeholder="e.g. 23"
             className="mt-2 w-32 rounded-xl border border-border bg-card px-4 py-3 text-base text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
             aria-invalid={!!errors.age}
-            aria-describedby={errors.age ? "age-error" : undefined}
+            aria-describedby={errors.age ? "age-error" : "age-help"}
           />
+          <p id="age-help" className="mt-2 text-xs text-muted-foreground">
+            This app is for adults aged 18 and over.
+          </p>
           {errors.age && (
             <p id="age-error" className="mt-2 text-xs text-destructive">
               {errors.age}
