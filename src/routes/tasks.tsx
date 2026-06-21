@@ -50,9 +50,10 @@ function TasksRoute() {
   const basePlan = TASKS[planKey];
   const medTask = MED_TASK[meds];
   const adaptive = adaptiveTask(today);
+  // "Today's plan" shows only actual, actionable tasks (not strategy tips).
+  // Strategy tips for the subtype now live on the Content tab.
   const planTasks: Task[] = [
     ...(adaptive ? [adaptive.task] : []),
-    ...basePlan.tasks,
     ...(medTask ? [medTask] : []),
   ];
 
@@ -253,65 +254,8 @@ function TasksRoute() {
           )}
 
           <p className="mt-3 text-[11px] text-muted-foreground">
-            Tip: ask TADA on the <Link to="/" className="underline">home tab</Link> — "add task email Sam" — and it lands here automatically.
+            Tip: ask TADA on the <Link to="/" className="underline">home tab</Link> — "add task email Sam" — and it lands on today's plan automatically.
           </p>
-
-          {custom.length > 0 && (
-            <ul className="mt-4 space-y-2">
-              {custom
-                .slice()
-                .sort((a, b) => (a.startMin ?? 0) - (b.startMin ?? 0))
-                .map((item) => (
-                <li key={item.id} className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleCustomTask(item.id)}
-                    className={
-                      "group flex flex-1 items-start gap-3 rounded-xl border p-3 text-left transition " +
-                      (item.done
-                        ? "border-primary/40 bg-primary/5"
-                        : "border-border bg-background active:bg-accent/30")
-                    }
-                  >
-                    <span
-                      aria-hidden
-                      className={
-                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border " +
-                        (item.done
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-transparent")
-                      }
-                    >
-                      ✓
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className={
-                          "block text-sm font-medium leading-snug " +
-                          (item.done ? "text-muted-foreground line-through" : "text-foreground")
-                        }
-                      >
-                        {item.title}
-                      </span>
-                      {typeof item.startMin === "number" && typeof item.durationMin === "number" && (
-                        <span className="mt-1 block text-[11px] text-muted-foreground">
-                          {fmtTime(item.startMin)} – {fmtTime(item.startMin + item.durationMin)} · {fmtDuration(item.durationMin)}
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCustom((c) => c.filter((x) => x.id !== item.id))}
-                    aria-label="Delete to-do"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/40 hover:text-foreground"
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </section>
 
         <DayCalendar tasks={custom} onToggle={toggleCustomTask} />
@@ -342,64 +286,130 @@ function TasksRoute() {
             </p>
           )}
 
-          <ul className="mt-4 space-y-2">
-            {planTasks.map((t, i) => {
-              const checked = !!done[i];
-              const isAdaptive = !!adaptive && i === 0;
-              const isMed = !!medTask && i === planTasks.length - 1;
-              return (
-                <li key={i}>
-                  <button
-                    type="button"
-                    onClick={() => togglePlanTask(i)}
-                    className={
-                      "group flex w-full items-start gap-3 rounded-xl border p-3 text-left transition " +
-                      (checked
-                        ? "border-primary/40 bg-primary/5"
-                        : "border-border bg-background active:bg-accent/30")
-                    }
-                  >
-                    <span
-                      aria-hidden
+          {planTasks.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {planTasks.map((t, i) => {
+                const checked = !!done[i];
+                const isAdaptive = !!adaptive && i === 0;
+                const isMed = !!medTask && i === planTasks.length - 1;
+                return (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      onClick={() => togglePlanTask(i)}
                       className={
-                        "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border " +
+                        "group flex w-full items-start gap-3 rounded-xl border p-3 text-left transition " +
                         (checked
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-transparent")
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border bg-background active:bg-accent/30")
                       }
                     >
-                      ✓
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-1">
-                        {isAdaptive && (
-                          <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-primary">
-                            Adapted
-                          </span>
-                        )}
-                        {isMed && (
-                          <span className="rounded-full bg-accent/60 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-accent-foreground">
-                            Medication
-                          </span>
-                        )}
-                      </span>
                       <span
+                        aria-hidden
                         className={
-                          "mt-0.5 block text-sm font-medium leading-snug " +
-                          (checked ? "text-muted-foreground line-through" : "text-foreground")
+                          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border " +
+                          (checked
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-transparent")
                         }
                       >
-                        {t.title}
+                        ✓
                       </span>
-                      <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
-                        {t.why}
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-1">
+                          {isAdaptive && (
+                            <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-primary">
+                              Adapted
+                            </span>
+                          )}
+                          {isMed && (
+                            <span className="rounded-full bg-accent/60 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-accent-foreground">
+                              Medication
+                            </span>
+                          )}
+                        </span>
+                        <span
+                          className={
+                            "mt-0.5 block text-sm font-medium leading-snug " +
+                            (checked ? "text-muted-foreground line-through" : "text-foreground")
+                          }
+                        >
+                          {t.title}
+                        </span>
+                        <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
+                          {t.why}
+                        </span>
                       </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <p className="mt-4 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Your to-dos
+          </p>
+          {custom.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Nothing scheduled yet — add one above and it'll be time-blocked for you.
+            </p>
+          ) : (
+            <ul className="mt-2 space-y-2">
+              {custom
+                .slice()
+                .sort((a, b) => (a.startMin ?? 0) - (b.startMin ?? 0))
+                .map((item) => (
+                  <li key={item.id} className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleCustomTask(item.id)}
+                      className={
+                        "group flex flex-1 items-start gap-3 rounded-xl border p-3 text-left transition " +
+                        (item.done
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border bg-background active:bg-accent/30")
+                      }
+                    >
+                      <span
+                        aria-hidden
+                        className={
+                          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border " +
+                          (item.done
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-transparent")
+                        }
+                      >
+                        ✓
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className={
+                            "block text-sm font-medium leading-snug " +
+                            (item.done ? "text-muted-foreground line-through" : "text-foreground")
+                          }
+                        >
+                          {item.title}
+                        </span>
+                        {typeof item.startMin === "number" && typeof item.durationMin === "number" && (
+                          <span className="mt-1 block text-[11px] text-muted-foreground">
+                            {fmtTime(item.startMin)} – {fmtTime(item.startMin + item.durationMin)} · {fmtDuration(item.durationMin)}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCustom((c) => c.filter((x) => x.id !== item.id))}
+                      aria-label="Delete to-do"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          )}
         </section>
 
         <NudgeCard subtype={stored.result.subtype} />
