@@ -13,6 +13,16 @@ import {
 } from "@/lib/adhd-shared";
 import { suggestNudge } from "@/lib/nudge.functions";
 import { chatReply } from "@/lib/chat.functions";
+import {
+  parseAddTaskIntent,
+  estimateDurationMin,
+  nextFreeStartMin,
+  defaultStartMin,
+  fmtTime,
+  fmtDuration,
+  customTasksKey,
+  type ScheduledTask,
+} from "@/lib/task-schedule";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,6 +66,40 @@ function HomeRoute() {
     setInput("");
     setBusy(true);
     setError(null);
+    // Local intent: "add task ..." → land it on the Tasks calendar
+    const taskTitle = parseAddTaskIntent(text);
+    if (taskTitle) {
+      try {
+        const key = customTasksKey(new Date().toISOString().slice(0, 10));
+        const existing: ScheduledTask[] = (() => {
+          try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; }
+        })();
+        const durationMin = estimateDurationMin(taskTitle);
+        const startMin = nextFreeStartMin(existing, defaultStartMin(), durationMin);
+        const item: ScheduledTask = {
+          id: Date.now() + Math.random(),
+          title: taskTitle,
+          done: false,
+          startMin,
+          durationMin,
+        };
+        const updated = [...existing, item];
+        localStorage.setItem(key, JSON.stringify(updated));
+        const reply =
+          `Added **${taskTitle}** to your **Tasks tab**.\n\n` +
+          `• Scheduled ${fmtTime(startMin)} – ${fmtTime(startMin + durationMin)}\n` +
+          `• Estimated time: ${fmtDuration(durationMin)}\n` +
+          `• Tap it on the day calendar to mark it done.`;
+        setMessages((m) => [...m, { role: "assistant", content: reply }]);
+      } catch {
+        setError("Couldn't save the task locally.");
+      } finally {
+        setBusy(false);
+        setTimeout(() => inputRef.current?.focus(), 0);
+      }
+      return;
+    }
+
     try {
       const { reply } = await ask({
         data: { messages: next.slice(-20), subtype: stored?.result.subtype },
