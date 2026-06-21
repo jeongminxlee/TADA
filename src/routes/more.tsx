@@ -81,36 +81,63 @@ function MoreRoute() {
               <article
                 key={k}
                 className={
-                  "group relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md " +
+                  "group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md " +
                   (mine
                     ? "border-primary/40 bg-gradient-to-br from-primary/10 via-card to-accent/5 shadow-sm"
                     : "border-border bg-card hover:border-primary/30")
                 }
               >
-                {mine && (
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/15 blur-2xl"
+                <div className="relative h-36 w-full overflow-hidden">
+                  <img
+                    src={ed.image}
+                    alt={ed.imageAlt}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                )}
-                <div className="flex items-center justify-between gap-2">
-                  <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-                    {ed.title}
-                  </p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+                  <div className="absolute left-4 top-3 flex items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs font-medium shadow-sm backdrop-blur">
+                    <span className="text-base leading-none">{ed.emoji}</span>
+                    <span className="uppercase tracking-[0.12em] text-primary">{ed.title}</span>
+                  </div>
                   {mine && (
-                    <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm">
+                    <span className="absolute right-3 top-3 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm">
                       ✦ You
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-base font-semibold leading-snug">{ed.tagline}</p>
-                {ed.body.map((p, i) => (
-                  <p key={i} className="mt-2.5 text-[13.5px] leading-relaxed text-foreground/85">{p}</p>
-                ))}
-                <p className="mt-3 border-t border-border/60 pt-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                  {ed.refs}
-                </p>
+                <div className="p-5">
+                  <p className="text-base font-semibold leading-snug">{ed.tagline}</p>
+
+                  <div className="mt-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      What it looks like
+                    </p>
+                    <ul className="mt-2 space-y-1.5">
+                      {ed.looksLike.map((item, i) => (
+                        <li key={i} className="rounded-xl bg-secondary/60 px-3 py-2 text-[13px] leading-snug">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+                      What tends to help
+                    </p>
+                    <ul className="mt-2 space-y-1.5">
+                      {ed.helps.map((item, i) => (
+                        <li key={i} className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-[13px] leading-snug">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <p className="mt-4 border-t border-border/60 pt-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                    {ed.refs}
+                  </p>
+                </div>
               </article>
             );
           })}

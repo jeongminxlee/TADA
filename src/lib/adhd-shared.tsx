@@ -2364,14 +2364,22 @@ export function seedDemoData() {
 // NICE NG87, Safren CBT-ADHD modules, and Barkley (2012).
 export const PSYCHOED: Record<
   "inattentive" | "hyperactive" | "combined" | "below",
-  { title: string; tagline: string; body: string[]; refs: string; image: string; imageAlt: string }
+  { title: string; tagline: string; body: string[]; refs: string; image: string; imageAlt: string; emoji: string; looksLike: string[]; helps: string[] }
 > = {
   inattentive: {
     title: "The daydreamer brain",
-    tagline: "Focus, remembering and finishing things feel like the hardest bits.",
-    body: [
-      "You probably lose your train of thought, forget what you walked into a room for, or drift off in the middle of a task. It isn't laziness — your brain just has a harder time holding on to what it's meant to be doing.",
-      "What tends to help: write everything down in one place, use a timer so you don't have to push yourself by willpower alone, and pick tomorrow's first task tonight so the morning is easy.",
+    tagline: "Focus and finishing things feel like the hardest bits.",
+    body: [],
+    emoji: "💭",
+    looksLike: [
+      "🌀 Drifting off mid-task",
+      "🔑 Losing keys, tabs, trains of thought",
+      "📚 Starting lots, finishing few",
+    ],
+    helps: [
+      "📝 One list, one place",
+      "⏲️ A timer instead of willpower",
+      "🌙 Pick tomorrow's first task tonight",
     ],
     refs: "Friendly summary, not medical advice.",
     image: onboardingFocus,
@@ -2380,9 +2388,18 @@ export const PSYCHOED: Record<
   hyperactive: {
     title: "The always-on brain",
     tagline: "Restlessness and acting on the spot show up more than zoning out.",
-    body: [
-      "You probably fidget a lot, blurt things out, or feel like there's an engine inside you that won't switch off. Trying to sit on it usually makes things worse — giving it somewhere to go works better.",
-      "What tends to help: move your body every day, take real breaks, count to ten before saying yes or hitting send, and protect your wind-down time so tomorrow starts calmer.",
+    body: [],
+    emoji: "⚡",
+    looksLike: [
+      "🦵 Fidgeting, tapping, pacing",
+      "💬 Blurting before thinking",
+      "🔥 An engine that won't switch off",
+    ],
+    helps: [
+      "🏃 Move your body every day",
+      "☕ Real breaks, not scrolling",
+      "🔢 Count to 10 before yes / send",
+      "🛌 Protect wind-down time",
     ],
     refs: "Friendly summary, not medical advice.",
     image: onboardingMovement,
@@ -2391,9 +2408,18 @@ export const PSYCHOED: Record<
   combined: {
     title: "A bit of both",
     tagline: "Drifting off and feeling restless both show up for you.",
-    body: [
-      "You get the tricky-to-focus side and the can't-sit-still side. The trick is to plan for both — give your brain something to look at, and your body something to do.",
-      "What tends to help: move first, then sit down to work; do 25 minutes on, 5 minutes off; keep a scrap of paper for the random thoughts that pop up; pause before saying yes to new things.",
+    body: [],
+    emoji: "🌗",
+    looksLike: [
+      "🎯 Hard to focus and hard to sit still",
+      "🧠 Brain busy, body buzzing",
+      "📥 Tasks pile up quickly",
+    ],
+    helps: [
+      "🚶 Move first, then sit to work",
+      "🍅 25 minutes on, 5 off",
+      "🗒️ A scrap pad for random thoughts",
+      "⏸️ Pause before saying yes",
     ],
     refs: "Friendly summary, not medical advice.",
     image: onboardingHero,
@@ -2402,9 +2428,17 @@ export const PSYCHOED: Record<
   below: {
     title: "Mostly steady",
     tagline: "Your answers don't really point to an ADHD pattern.",
-    body: [
-      "That doesn't mean everything is easy — focus and energy still wobble for everyone. The tools in this app can still help you keep an eye on mood, energy and your to-do list.",
-      "If things are causing you stress day to day, your GP is a good first stop — they can talk it through and refer you if needed.",
+    body: [],
+    emoji: "🌿",
+    looksLike: [
+      "😌 Focus usually holds",
+      "🔋 Energy mostly steady",
+      "📅 Day-to-day feels manageable",
+    ],
+    helps: [
+      "📈 Track mood and energy here",
+      "✅ Use the to-do list for big days",
+      "🩺 Chat to your GP if life feels heavy",
     ],
     refs: "Friendly summary, not medical advice.",
     image: onboardingCalm,
