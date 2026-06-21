@@ -29,8 +29,8 @@ function MoreRoute() {
   const [section, setSection] = useState<"learn" | "nhs" | "settings">("learn");
   const [decodedFilter, setDecodedFilter] = useState<"All" | "Diagnosis" | "Brain" | "Symptoms" | "Treatment" | "Co-occurring">("All");
   const [openTerm, setOpenTerm] = useState<string | null>(null);
-  const [openSubtypes, setOpenSubtypes] = useState<Set<string>>(new Set([subtypeKey]));
   const subtypeKey = stored?.result.key ?? "below";
+  const [openSubtypes, setOpenSubtypes] = useState<Set<string>>(new Set([subtypeKey]));
 
   const toggleSubtype = (k: string) => {
     setOpenSubtypes((prev) => {
