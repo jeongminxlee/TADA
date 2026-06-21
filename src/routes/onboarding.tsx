@@ -134,6 +134,11 @@ function OnboardingRoute() {
     navigate({ to: "/", replace: true });
   }
 
+  function skipWithDemo() {
+    seedDemoData();
+    navigate({ to: "/", replace: true });
+  }
+
   return (
     <main className="relative min-h-[100dvh] overflow-hidden bg-background text-foreground">
       <BackgroundBlobs />
