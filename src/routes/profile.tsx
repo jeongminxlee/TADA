@@ -125,6 +125,8 @@ function ProfileRoute() {
               )}
             </div>
 
+            <RewardsCard points={points} />
+
             {/* Actions */}
             <div className="space-y-2 pt-2">
               <Link
