@@ -83,14 +83,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TADA — ADHD self-management (UK)" },
-      { name: "description", content: "Mobile app for adults with ADHD in the UK: WHO ASRS screener, daily mood tracking, adaptive tasks, AI coach, and NHS signposting (NICE NG87)." },
+      { title: "TADA" },
+      { name: "description", content: "TADA, your non-diagnostic ADHD coach. Tips and pointers to the right in-app tool. Tailored, accurate support to bridge the gap between screening and diagnosis." },
       { name: "theme-color", content: "#7a9e40" },
-      { property: "og:title", content: "TADA — ADHD self-management (UK)" },
-      { property: "og:description", content: "ASRS screener, mood tracking, adaptive tasks, AI coach, NHS signposting." },
+      { property: "og:title", content: "TADA" },
+      { property: "og:description", content: "TADA, your non-diagnostic ADHD coach. Tips and pointers to the right in-app tool. Tailored, accurate support to bridge the gap between screening and diagnosis." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "TADA" },
+      { name: "twitter:description", content: "TADA, your non-diagnostic ADHD coach. Tips and pointers to the right in-app tool. Tailored, accurate support to bridge the gap between screening and diagnosis." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/623cc629-a445-48f5-a895-8bbb11683c7b/id-preview-9e437929--087fbdea-2668-49a1-8a70-7f7c55aedf71.lovable.app-1782055005029.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/623cc629-a445-48f5-a895-8bbb11683c7b/id-preview-9e437929--087fbdea-2668-49a1-8a70-7f7c55aedf71.lovable.app-1782055005029.png" },
     ],
     links: [
       {
