@@ -1,5 +1,7 @@
 # TADA - ADHD Self-Management Companion
 
+Built at Cambridge Judge Business School's Zero-to-One weekend venture-building programme. Invited to apply for SPARK 2.0 at the King's College Cambridge E-Lab.
+
 TADA is a non-diagnostic ADHD self-management app designed for adults in the UK. It bridges the gap between screening and diagnosis by providing tailored psychoeducation, daily planning tools, mood tracking, and an AI companion that nudges you toward actionable next steps.
 
 ## Features
