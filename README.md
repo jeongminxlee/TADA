@@ -103,4 +103,4 @@ public/                # Static assets, PWA manifest, icons
 
 ## License
 
-This project is proprietary. Built with [Lovable](https://lovable.dev).
+This project is proprietary.
